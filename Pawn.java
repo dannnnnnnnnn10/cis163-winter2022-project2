@@ -1,16 +1,57 @@
 package Project2;
 
+/**********************************************************************
+ * @author Dan Dietsche
+ * CIS 163 Winter 2022
+ * Project 2
+ *
+ * Pawn class, extends ChessPiece and holds valid move logic for pawns
+ *
+ */
 public class Pawn extends ChessPiece {
 
+	/******************************************************************
+	 * constructs a Pawn and sets owner to the given parameter
+	 *
+	 * @param player the owner of the chess piece
+	 */
 	public Pawn(Player player) {
 		super(player);
 	}
 
+	/******************************************************************
+	 * Return the type of this piece ("King", "Queen", "Rook", etc.).
+	 * Note:  In this case "type" refers to the game of chess, not
+	 * the type of the Java class.
+	 *
+	 * @return the type of this piece
+	 */
+	@Override
 	public String type() {
 		return "Pawn";
 	}
 
-	// determines if the move is valid for a pawn piece
+	/******************************************************************
+	 * Returns whether the piece at location
+	 * {@code [move.fromRow, move.fromColumn]} is allowed to move to
+	 * location {@code [move.fromRow, move.fromColumn]}.
+	 *
+	 * Note:  Pieces don't store their own location
+	 * (because doing so would be redundant).  Therefore, the
+	 * {@code [move.fromRow, move.fromColumn]} component of
+	 * {@code move} is necessary. {@code this} object must be the piece
+	 * at location {@code [move.fromRow, move.fromColumn]}.
+	 * (This method makes no sense otherwise.)
+	 *
+	 * @param move  a {@link Project2.Move} object describing the
+	 *                  move to be made.
+	 * @param board the {@link Project2.IChessPiece} in which this
+	 *                  piece resides.
+	 *
+	 * @return {@code true} if the proposed move is valid,
+	 *  				{@code false}otherwise.
+	 */
+	@Override
 	public boolean isValidMove(Move move, IChessPiece[][] board) {
 		boolean valid = super.isValidMove(move, board);
         if (valid == false) { return valid; }
