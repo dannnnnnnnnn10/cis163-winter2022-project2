@@ -1,1 +1,26 @@
 chess or something
+
+Chess Rules:
+
+This is assuming white is on bottom and black is on top
+
+Pawn: definition of forward differs based on color. white’s ‘forwards’ is up, black’s ‘forwards’ is down.
+if pawn is in starting position, it can move forwards one or two spaces. If not in starting position,
+it can only move forwards one space. If moving forward, it can’t capture other pieces.
+Pawn can also move diagonal forward one space, but only to capture other pieces.
+
+Rook: moves as many spaces as it wants to in any cardinal direction (up/down/left/right). Cannot move through other pieces.
+
+Bishop: moves as many spaces as it wants to in any ordinal direction (diagonals). Cannot move through other pieces.
+
+Queen: has movement of both rook and bishop
+
+King: moves one space in any direction
+
+Knight: moves in two forward, one left or right. Can move through other pieces.
+
+There’s also rules about putting your opponent’s king into check. If you can move a piece to capture your opponent’s king,
+the opponent must move their piece to take their king out of check, either by moving their king, moving another piece in
+the way, or removing the piece that can capture their king.
+
+The game ends by putting your opponent’s king into checkmate. This is when your opponent has no way to take their king out of check.
