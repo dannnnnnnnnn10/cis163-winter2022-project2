@@ -31,6 +31,9 @@ public class Bishop extends ChessPiece {
                         valid = false;
                         break;
                     }
+                    else{
+                        break;
+                    }
                 }
             }
         }
@@ -41,6 +44,9 @@ public class Bishop extends ChessPiece {
                 for(int k = move.fromColumn + 1; k < move.toColumn; k++){
                     if(board[i][k] != null){
                         valid = false;
+                        break;
+                    }
+                    else{
                         break;
                     }
                 }
@@ -68,6 +74,9 @@ public class Bishop extends ChessPiece {
                 for(int k = move.fromColumn + 1; k < move.toColumn; k++){
                     if(board[i][k] != null){
                         valid = false;
+                        break;
+                    }
+                    else{
                         break;
                     }
                 }
