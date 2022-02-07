@@ -1,21 +1,23 @@
 package Project2;
 
-public class ChessModel implements IChessModel {	 
-    private IChessPiece[][] board;
+import javax.swing.*;
+
+public class ChessModel implements IChessModel {
+	private IChessPiece[][] board;
 	private Player player;
 
 	public ChessModel() {
 		board = new IChessPiece[8][8];
 		player = Player.WHITE;
 
-        board[7][0] = new Rook(Player.WHITE);
-        board[7][1] = new Knight(Player.WHITE);
-        board[7][2] = new Bishop(Player.WHITE);
-        board[7][3] = new Queen(Player.WHITE);
-        board[7][4] = new King(Player.WHITE);
-        board[7][5] = new Bishop(Player.WHITE);
-        board[7][6] = new Knight (Player.WHITE);
-        board[7][7] = new Rook(Player.WHITE);
+		board[7][0] = new Rook(Player.WHITE);
+		board[7][1] = new Knight(Player.WHITE);
+		board[7][2] = new Bishop(Player.WHITE);
+		board[7][3] = new Queen(Player.WHITE);
+		board[7][4] = new King(Player.WHITE);
+		board[7][5] = new Bishop(Player.WHITE);
+		board[7][6] = new Knight (Player.WHITE);
+		board[7][7] = new Rook(Player.WHITE);
 
 		board[6][0] = new Pawn(Player.WHITE);
 		board[6][1] = new Pawn(Player.WHITE);
@@ -54,16 +56,10 @@ public class ChessModel implements IChessModel {
 	public boolean isComplete() {
 		boolean valid = true;
 		Move test;
-		IChessPiece[][] currentBoard = board;
-		Player p;
-		// check which player is in check
-		if (inCheck(Player.BLACK)) {
-			p = Player.BLACK;
-		}
-		else if (inCheck(Player.WHITE)) {
-			p = Player.WHITE;
-		}
-		else {
+		IChessPiece[][] currentBoard = copyBoard(board);
+		Player p = this.player;
+		// check if current player is in check
+		if (!inCheck(p)) {
 			return false;
 		}
 
@@ -82,7 +78,7 @@ public class ChessModel implements IChessModel {
 							// see if new move is valid
 							if (board[a][b].isValidMove(test, board)) {
 								// try move
-								move(test);
+								tryMove(test);
 								// check if player is still in check
 								// if not, set valid to false and break
 								// nested loops
@@ -91,7 +87,7 @@ public class ChessModel implements IChessModel {
 									a = b = c = d = 8;
 								}
 								// reset board after test
-								board = currentBoard;
+								board = copyBoard(currentBoard);
 							}
 						}
 					}
@@ -126,12 +122,19 @@ public class ChessModel implements IChessModel {
 
 		boolean valid = false;
 
-		if (board[move.fromRow][move.fromColumn] != null) {
-			if (board[move.fromRow][move.fromColumn].
-					isValidMove(move, board)) {
-				return true;
+		if (board[move.fromRow][move.fromColumn] != null
+				&& board[move.fromRow][move.fromColumn].
+					isValidMove(move, board)
+				&& board[move.fromRow][move.fromColumn].player()
+					== player) {
+			IChessPiece[][] currentBoard = copyBoard(board);
+			tryMove(move);
+			if (!inCheck(player)) {
+				valid = true;
 			}
+			board = copyBoard(currentBoard);
 		}
+
 		return valid;
 	}
 
@@ -148,6 +151,27 @@ public class ChessModel implements IChessModel {
 	 *  			 represent valid locations on the board.
 	 */
 	public void move(Move move) {
+		if (move.fromRow < 0 || move.fromRow > 7 || move.fromColumn < 0
+				|| move.fromColumn > 7 || move.toRow < 0
+				|| move.toRow > 7 || move.toColumn < 0
+				|| move.toColumn > 7) {
+			throw new IndexOutOfBoundsException();
+		}
+
+		board[move.toRow][move.toColumn] =
+				board[move.fromRow][move.fromColumn];
+		board[move.fromRow][move.fromColumn] = null;
+
+		this.player = this.player.next();
+		if (inCheck(player)) {
+			JOptionPane.showMessageDialog(null, "" + player + " is in check!");
+		}
+		if (isComplete()) {
+			JOptionPane.showMessageDialog(null, "CHECKMATE! " + player + " has lost!");
+		}
+	}
+
+	private void tryMove(Move move) {
 		if (move.fromRow < 0 || move.fromRow > 7 || move.fromColumn < 0
 				|| move.fromColumn > 7 || move.toRow < 0
 				|| move.toRow > 7 || move.toColumn < 0
@@ -202,6 +226,49 @@ public class ChessModel implements IChessModel {
 		return valid;
 	}
 
+
+	/******************************************************************
+	 * takes a board array and returns a new board array with the same
+	 * piece layout but different addresses
+	 *
+	 * @param board board array
+	 *
+	 * @return copy of board array
+	 */
+	private IChessPiece[][] copyBoard(IChessPiece[][] board) {
+		IChessPiece[][] currentBoard = new IChessPiece[8][8];
+		for (int i = 0; i < 8; ++i) {
+			for (int j = 0; j < 8; ++ j) {
+				if (board[i][j] != null) {
+					if (board[i][j].type().equals("Pawn")) {
+						currentBoard[i][j] =
+								new Pawn(board[i][j].player());
+					}
+					else if (board[i][j].type().equals("Rook")) {
+						currentBoard[i][j] =
+								new Rook(board[i][j].player());
+					}
+					else if (board[i][j].type().equals("Knight")) {
+						currentBoard[i][j] =
+								new Knight(board[i][j].player());
+					}
+					else if (board[i][j].type().equals("King")) {
+						currentBoard[i][j] =
+								new King(board[i][j].player());
+					}
+					else if (board[i][j].type().equals("Queen")) {
+						currentBoard[i][j] =
+								new Queen(board[i][j].player());
+					}
+					else if (board[i][j].type().equals("Bishop")) {
+						currentBoard[i][j] =
+								new Bishop(board[i][j].player());
+					}
+				}
+			}
+		}
+		return currentBoard;
+	}
 
 	/******************************************************************
 	 * Return the current player.
@@ -267,21 +334,21 @@ public class ChessModel implements IChessModel {
 	 */
 	public void AI() {
 		/*
-		 * Write a simple AI set of rules in the following order. 
+		 * Write a simple AI set of rules in the following order.
 		 * a. Check to see if you are in check.
-		 * 		i. If so, get out of check by moving the king or placing a piece to block the check 
-		 * 
-		 * b. Attempt to put opponent into check (or checkmate). 
+		 * 		i. If so, get out of check by moving the king or placing a piece to block the check
+		 *
+		 * b. Attempt to put opponent into check (or checkmate).
 		 * 		i. Attempt to put opponent into check without losing your piece
-		 *		ii. Perhaps you have won the game. 
+		 *		ii. Perhaps you have won the game.
 		 *
-		 *c. Determine if any of your pieces are in danger, 
-		 *		i. Move them if you can. 
-		 *		ii. Attempt to protect that piece. 
+		 *c. Determine if any of your pieces are in danger,
+		 *		i. Move them if you can.
+		 *		ii. Attempt to protect that piece.
 		 *
-		 *d. Move a piece (pawns first) forward toward opponent king 
+		 *d. Move a piece (pawns first) forward toward opponent king
 		 *		i. check to see if that piece is in danger of being removed, if so, move a different piece.
 		 */
 
-		}
+	}
 }
