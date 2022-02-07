@@ -48,65 +48,31 @@ public class King extends ChessPiece {
         if (valid == false) {
             return valid;
         }
+        if (move.fromColumn == move.toColumn) {
+            //King can move 1 space back and forward
+            // if staying in same column
+            if (Math.abs(move.fromRow - move.toRow) != 1) {
+                valid = false;
+            }
+        }
+        //Checks if player is staying in same row
+        else if(move.fromRow == move.toRow){
+            //King can move 1 space left and right
+            // if staying in same row
+            if (Math.abs(move.fromColumn - move.toColumn) != 1) {
+                valid = false;
+            }
+        }
+        //Checks if player is moving diagonally
+        else{
+            //King can move 1 space left and right
+            // and 1 space forward and back
+            if(Math.abs(move.fromRow - move.toRow) != 1
+                    || Math.abs(move.fromColumn - move.toColumn) != 1){
+                valid = false;
+            }
+        }
 
-        //Checks player, white
-        //fromRow - toRow = positive
-        if (player() == Player.WHITE) {
-            //Checks if player is staying in same column
-            if (move.fromColumn == move.toColumn) {
-                //King can move 1 space back and forward
-                // if staying in same column
-                if (Math.abs(move.fromRow - move.toRow) != 1) {
-                    valid = false;
-                }
-            }
-            //Checks if player is staying in same row
-            else if(move.fromRow == move.toRow){
-                //King can move 1 space left and right
-                // if staying in same row
-                if (Math.abs(move.fromColumn - move.toColumn) != 1) {
-                    valid = false;
-                }
-            }
-            //Checks if player is moving diagonally
-            else{
-                //King can move 1 space left and right
-                // and 1 space forward and back
-                if(Math.abs(move.fromRow - move.toRow) != 1 ||
-                    Math.abs(move.fromColumn - move.toColumn) != 1){
-                    valid = false;
-                }
-            }
-        }
-        //Checks player, black
-        //fromRow - toRow = negative
-        else {
-            //Checks if player is staying in same column
-            if (move.fromColumn == move.toColumn) {
-                //King can move 1 space back and forward
-                // if staying in same column
-                if (Math.abs(move.fromRow - move.toRow) != 1) {
-                    valid = false;
-                }
-            }
-            //Checks if player is staying in same row
-            else if(move.fromRow == move.toRow) {
-                //King can move 1 space left and right
-                // if staying in same row
-                if (Math.abs(move.fromColumn - move.toColumn) != 1) {
-                    valid = false;
-                }
-            }
-            //Checks if player is moving diagonally
-            else{
-                //King can move 1 space left and right
-                // and 1 space forward and back
-                if(Math.abs(move.fromRow - move.toRow) != 1 ||
-                    Math.abs(move.fromColumn - move.toColumn) != 1){
-                    valid = false;
-                }
-            }
-        }
         return valid;
     }
 }
