@@ -16,7 +16,7 @@ public class ChessModel implements IChessModel {
 		board[7][3] = new Queen(Player.WHITE);
 		board[7][4] = new King(Player.WHITE);
 		board[7][5] = new Bishop(Player.WHITE);
-		board[7][6] = new Knight (Player.WHITE);
+		board[7][6] = new Knight(Player.WHITE);
 		board[7][7] = new Rook(Player.WHITE);
 
 		board[6][0] = new Pawn(Player.WHITE);
@@ -34,7 +34,7 @@ public class ChessModel implements IChessModel {
 		board[0][3] = new King(Player.BLACK);
 		board[0][4] = new Queen(Player.BLACK);
 		board[0][5] = new Bishop(Player.BLACK);
-		board[0][6] = new Knight (Player.BLACK);
+		board[0][6] = new Knight(Player.BLACK);
 		board[0][7] = new Rook(Player.BLACK);
 
 		board[1][0] = new Pawn(Player.BLACK);
@@ -162,25 +162,12 @@ public class ChessModel implements IChessModel {
 				board[move.fromRow][move.fromColumn];
 		board[move.fromRow][move.fromColumn] = null;
 
-		this.player = this.player.next();
-		if (inCheck(player)) {
-			JOptionPane.showMessageDialog(null, "" + player + " is in check!");
-		}
-		if (isComplete()) {
-			JOptionPane.showMessageDialog(null, "CHECKMATE! " + player + " has lost!");
-		}
+		setNextPlayer();
 	}
 
 	private void tryMove(Move move) {
-		if (move.fromRow < 0 || move.fromRow > 7 || move.fromColumn < 0
-				|| move.fromColumn > 7 || move.toRow < 0
-				|| move.toRow > 7 || move.toColumn < 0
-				|| move.toColumn > 7) {
-			throw new IndexOutOfBoundsException();
-		}
-
 		board[move.toRow][move.toColumn] =
-				board[move.fromRow][move.fromColumn];
+			board[move.fromRow][move.fromColumn];
 		board[move.fromRow][move.fromColumn] = null;
 	}
 

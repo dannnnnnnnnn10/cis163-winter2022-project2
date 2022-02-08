@@ -6,6 +6,46 @@ import static org.junit.Assert.*;
 
 public class TestChess {
 
+    @Test
+    public void testChessPiece() {
+        IChessPiece[][] board = new IChessPiece[8][8];
+
+        board[6][2] = new Pawn(Player.WHITE);
+
+        Move move = new Move(6, 2, 6, 2);
+
+        assertFalse(board[6][2].isValidMove(move, board));
+
+        move = new Move(6, 2, 5, 6);
+
+        board[5][6] = new Queen(Player.WHITE);
+
+        assertFalse(board[6][2].isValidMove(move, board));
+
+    }
+
+    @Test(expected = IndexOutOfBoundsException.class)
+    public void testChessPieceOOB() {
+        IChessPiece[][] board = new IChessPiece[8][8];
+
+        board[6][2] = new Pawn(Player.WHITE);
+
+        Move move = new Move(5, 2, 6, -1);
+
+        board[6][2].isValidMove(move, board);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testChessPieceIllegalArg() {
+        IChessPiece[][] board = new IChessPiece[8][8];
+
+        board[6][2] = new Pawn(Player.WHITE);
+
+        Move move = new Move(5, 2, 6, 2);
+
+        board[6][2].isValidMove(move, board);
+    }
+
     // tests that Pawn's white move logic is working
     @Test
     public void testPawnIsValidMoveWhite() {
@@ -13,7 +53,7 @@ public class TestChess {
 
         board[6][2] = new Pawn(Player.WHITE);
 
-        assertTrue(board[6][2].player() == Player.WHITE);
+        assertSame(Player.WHITE, board[6][2].player());
 
         assertSame("Pawn", board[6][2].type());
 
@@ -97,7 +137,7 @@ public class TestChess {
 
         board[1][2] = new Pawn(Player.BLACK);
 
-        assertTrue(board[1][2].player() == Player.BLACK);
+        assertSame(Player.BLACK, board[1][2].player());
 
         Move move = new Move(1, 2, 2, 2);
 
@@ -337,6 +377,126 @@ public class TestChess {
         move = new Move(3, 2, 3, 0);
 
         assertFalse(board[3][2].isValidMove(move, board));
+    }
+
+    @Test
+    public void testChessModelSimple() {
+        ChessModel model = new ChessModel();
+
+        assertSame(8, model.numColumns());
+        assertSame(8, model.numRows());
+        assertSame(Player.WHITE, model.currentPlayer());
+
+        model.setNextPlayer();
+        assertSame(Player.BLACK, model.currentPlayer());
+
+        assertSame("Pawn", model.pieceAt(6,0).type());
+        assertSame(Player.BLACK, model.pieceAt(1,5).player());
+
+        model.setPiece(4, 3, new Rook(Player.WHITE));
+        assertEquals("Rook", model.pieceAt(4, 3).type());
+        assertSame(Player.WHITE, model.pieceAt(4, 3).player());
+    }
+
+    @Test(expected = IndexOutOfBoundsException.class)
+    public void testChessModelIsValidMoveOOB() {
+        ChessModel model = new ChessModel();
+
+        Move move = new Move(5, 3, 10, 2);
+
+        model.isValidMove(move);
+
+    }
+
+    @Test
+    public void TestChessModelIsValidMove() {
+        ChessModel model = new ChessModel();
+
+        Move move = new Move(5, 3, 4, 2);
+
+        assertFalse(model.isValidMove(move));
+
+        move = new Move(1, 0, 2, 0);
+
+        assertFalse(model.isValidMove(move));
+
+        move = new Move(6, 0, 4, 0);
+
+        assertTrue(model.isValidMove(move));
+
+        model.setPiece(5, 2, new Rook(Player.BLACK));
+
+        model.setPiece(5, 3, new Pawn(Player.WHITE));
+
+        model.setPiece(5, 4, new King(Player.WHITE));
+
+        model.setPiece(7, 4, null);
+
+        move = new Move(5, 3, 4, 3);
+
+        assertFalse(model.isValidMove(move));
+    }
+
+    @Test(expected = IndexOutOfBoundsException.class)
+    public void testChessModelMoveOOB() {
+        ChessModel model = new ChessModel();
+
+        Move move = new Move(5, 3, 10, 2);
+
+        model.move(move);
+
+    }
+
+    @Test
+    public void TestChessModelMove() {
+        ChessModel model = new ChessModel();
+
+        Move move = new Move(6, 2, 5, 2);
+
+        model.move(move);
+
+        assertNull(model.pieceAt(6,2));
+        assertSame("Pawn", model.pieceAt(5, 2).type());
+        assertSame(Player.WHITE, model.pieceAt(5, 2).player());
+        assertSame(Player.BLACK, model.currentPlayer());
+    }
+
+    @Test
+    public void TestChessModelInCheck() {
+        ChessModel model = new ChessModel();
+
+        model.setPiece(6, 4, null);
+
+        model.setPiece(3, 4, new Rook(Player.BLACK));
+
+        assertTrue(model.inCheck(Player.WHITE));
+        assertFalse(model.inCheck(Player.BLACK));
+    }
+
+    @Test
+    public void TestChessModelIsComplete() {
+        ChessModel model = new ChessModel();
+
+        assertFalse(model.isComplete());
+
+        model.setPiece(6, 4, null);
+
+        model.setPiece(5, 4, new Rook(Player.BLACK));
+
+        assertFalse(model.isComplete());
+
+        model.setPiece(4, 4, new Rook(Player.BLACK));
+
+        model.setPiece(5, 4, null);
+
+        model.setPiece(7, 3, new Pawn(Player.WHITE));
+
+        model.setPiece(7, 6, null);
+
+        model.setPiece(7, 5, new Pawn(Player.WHITE));
+
+        assertTrue(model.isComplete());
+
     }
 
 }
