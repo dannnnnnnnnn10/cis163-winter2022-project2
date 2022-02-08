@@ -1,14 +1,18 @@
 package Project2;
 
-import javax.swing.*;
+import java.util.ArrayList;
 
 public class ChessModel implements IChessModel {
 	private IChessPiece[][] board;
 	private Player player;
+	private ArrayList<SaveState> prevMoves;
+	private int turn;
 
 	public ChessModel() {
 		board = new IChessPiece[8][8];
 		player = Player.WHITE;
+		turn = 0;
+		prevMoves = new ArrayList<>(0);
 
 		board[7][0] = new Rook(Player.WHITE);
 		board[7][1] = new Knight(Player.WHITE);
@@ -56,7 +60,6 @@ public class ChessModel implements IChessModel {
 	public boolean isComplete() {
 		boolean valid = true;
 		Move test;
-		IChessPiece[][] currentBoard = copyBoard(board);
 		Player p = this.player;
 		// check if current player is in check
 		if (!inCheck(p)) {
@@ -77,6 +80,7 @@ public class ChessModel implements IChessModel {
 							test = new Move(a, b, c, d);
 							// see if new move is valid
 							if (board[a][b].isValidMove(test, board)) {
+								SaveState prevState = new SaveState(test, board);
 								// try move
 								tryMove(test);
 								// check if player is still in check
@@ -87,7 +91,8 @@ public class ChessModel implements IChessModel {
 									a = b = c = d = 8;
 								}
 								// reset board after test
-								board = copyBoard(currentBoard);
+								board[prevState.move.fromRow][prevState.move.fromColumn] = prevState.fromPiece;
+								board[prevState.move.toRow][prevState.move.toColumn] = prevState.toPiece;
 							}
 						}
 					}
@@ -127,12 +132,13 @@ public class ChessModel implements IChessModel {
 					isValidMove(move, board)
 				&& board[move.fromRow][move.fromColumn].player()
 					== player) {
-			IChessPiece[][] currentBoard = copyBoard(board);
+			SaveState prevState = new SaveState(move, board);
 			tryMove(move);
 			if (!inCheck(player)) {
 				valid = true;
 			}
-			board = copyBoard(currentBoard);
+			board[prevState.move.fromRow][prevState.move.fromColumn] = prevState.fromPiece;
+			board[prevState.move.toRow][prevState.move.toColumn] = prevState.toPiece;
 		}
 
 		return valid;
@@ -158,11 +164,29 @@ public class ChessModel implements IChessModel {
 			throw new IndexOutOfBoundsException();
 		}
 
+		prevMoves.add(new SaveState(move, board));
 		board[move.toRow][move.toColumn] =
 				board[move.fromRow][move.fromColumn];
 		board[move.fromRow][move.fromColumn] = null;
 
 		setNextPlayer();
+		turn++;
+
+		for (int i = 0; i < 8; ++i) {
+			if (board[0][i] != null && board[7][i] != null) {
+				if (board[0][i] != null) {
+					if (board[0][i].type().equals("Pawn") &&
+							board[0][i].player().equals(Player.WHITE)) {
+						board[0][i] = new Queen(Player.WHITE);
+					}
+					if (board[7][i].type().equals("Pawn") &&
+							board[7][i].player().equals(Player.BLACK)) {
+						board[7][i] = new Queen(Player.BLACK);
+					}
+				}
+			}
+		}
+
 	}
 
 	private void tryMove(Move move) {
@@ -213,48 +237,14 @@ public class ChessModel implements IChessModel {
 		return valid;
 	}
 
+	public void undo() {
+		SaveState save = prevMoves.get(prevMoves.size()-1);
 
-	/******************************************************************
-	 * takes a board array and returns a new board array with the same
-	 * piece layout but different addresses
-	 *
-	 * @param board board array
-	 *
-	 * @return copy of board array
-	 */
-	private IChessPiece[][] copyBoard(IChessPiece[][] board) {
-		IChessPiece[][] currentBoard = new IChessPiece[8][8];
-		for (int i = 0; i < 8; ++i) {
-			for (int j = 0; j < 8; ++ j) {
-				if (board[i][j] != null) {
-					if (board[i][j].type().equals("Pawn")) {
-						currentBoard[i][j] =
-								new Pawn(board[i][j].player());
-					}
-					else if (board[i][j].type().equals("Rook")) {
-						currentBoard[i][j] =
-								new Rook(board[i][j].player());
-					}
-					else if (board[i][j].type().equals("Knight")) {
-						currentBoard[i][j] =
-								new Knight(board[i][j].player());
-					}
-					else if (board[i][j].type().equals("King")) {
-						currentBoard[i][j] =
-								new King(board[i][j].player());
-					}
-					else if (board[i][j].type().equals("Queen")) {
-						currentBoard[i][j] =
-								new Queen(board[i][j].player());
-					}
-					else if (board[i][j].type().equals("Bishop")) {
-						currentBoard[i][j] =
-								new Bishop(board[i][j].player());
-					}
-				}
-			}
-		}
-		return currentBoard;
+		board[save.move.fromRow][save.move.fromColumn] = save.fromPiece;
+		board[save.move.toRow][save.move.toColumn] = save.toPiece;
+		prevMoves.remove(prevMoves.size()-1);
+		turn--;
+		setNextPlayer();
 	}
 
 	/******************************************************************

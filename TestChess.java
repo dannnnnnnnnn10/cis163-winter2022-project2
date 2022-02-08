@@ -448,7 +448,7 @@ public class TestChess {
     }
 
     @Test
-    public void TestChessModelMove() {
+    public void TestChessModelMoveAndUndo() {
         ChessModel model = new ChessModel();
 
         Move move = new Move(6, 2, 5, 2);
@@ -459,6 +459,38 @@ public class TestChess {
         assertSame("Pawn", model.pieceAt(5, 2).type());
         assertSame(Player.WHITE, model.pieceAt(5, 2).player());
         assertSame(Player.BLACK, model.currentPlayer());
+
+        model.undo();
+        assertNull(model.pieceAt(5,2));
+        assertSame("Pawn", model.pieceAt(6, 2).type());
+        assertSame(Player.WHITE, model.pieceAt(6, 2).player());
+        assertSame(Player.WHITE, model.currentPlayer());
+
+        model.setPiece(0,5,null);
+        model.setPiece(1,5,new Pawn(Player.WHITE));
+
+        move = new Move(1,5,0,5);
+
+        model.move(move);
+
+        assertSame("Queen", model.pieceAt(0,5).type());
+
+        model.undo();
+
+        assertNull(model.pieceAt(0,5));
+        assertSame("Pawn", model.pieceAt(1,5).type());
+
+        model.move(move);
+
+        model.setPiece(7,5,null);
+        model.setPiece(6,5,new Pawn(Player.BLACK));
+
+        move = new Move(6,5,7,5);
+
+        model.move(move);
+
+        assertSame("Queen", model.pieceAt(7,5).type());
+
     }
 
     @Test
