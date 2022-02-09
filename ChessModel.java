@@ -224,7 +224,7 @@ public class ChessModel implements IChessModel {
 		}
 
 		updateCastlingData(move, board);
-		canPromote(board);
+		promotionCheck(board);
 		setNextPlayer();
 		turn++;
 
@@ -314,14 +314,15 @@ public class ChessModel implements IChessModel {
 		setNextPlayer();
 	}
 
-	public void canPromote(IChessPiece[][] board) {
+	public void promotionCheck(IChessPiece[][] board) {
 		for (int i = 0; i < 8; ++i) {
-			if (board[0][i] != null && board[7][i] != null) {
 				if (board[0][i] != null) {
 					if (board[0][i].type().equals("Pawn") &&
 							board[0][i].player().equals(Player.WHITE)) {
 						board[0][i] = new Queen(Player.WHITE);
 					}
+				}
+				if (board[7][i] != null) {
 					if (board[7][i].type().equals("Pawn") &&
 							board[7][i].player().equals(Player.BLACK)) {
 						board[7][i] = new Queen(Player.BLACK);
@@ -329,7 +330,6 @@ public class ChessModel implements IChessModel {
 				}
 			}
 		}
-	}
 
 	public boolean isEnPassant(Move move, IChessPiece[][] board) {
 		boolean valid = false;
@@ -343,9 +343,6 @@ public class ChessModel implements IChessModel {
 		if (!board[move.fromRow][move.fromColumn].type().equals("Pawn")) {
 			return valid;
 		}
-		if (board[move.toRow][move.toColumn] != null) {
-			return valid;
-		}
 		if (player == Player.WHITE) {
 			if (move.fromRow == 3) {
 				if (move.toColumn == lastTurn.move.fromColumn &&
@@ -356,9 +353,9 @@ public class ChessModel implements IChessModel {
 			}
 		}
 		else if (player == Player.BLACK) {
-			if (move.fromRow == 5) {
+			if (move.fromRow == 4) {
 				if (move.toColumn == lastTurn.move.fromColumn &&
-						Math.abs(move.fromColumn = move.toColumn) == 1
+						Math.abs(move.fromColumn - move.toColumn) == 1
 						&& (move.fromRow - move.toRow) == -1) {
 					valid = true;
 				}

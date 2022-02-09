@@ -409,7 +409,7 @@ public class TestChess {
     }
 
     @Test
-    public void TestChessModelIsValidMove() {
+    public void testChessModelIsValidMove() {
         ChessModel model = new ChessModel();
 
         Move move = new Move(5, 3, 4, 2);
@@ -448,7 +448,7 @@ public class TestChess {
     }
 
     @Test
-    public void TestChessModelMoveAndUndo() {
+    public void testChessModelMoveAndUndo() {
         ChessModel model = new ChessModel();
 
         Move move = new Move(6, 2, 5, 2);
@@ -466,10 +466,25 @@ public class TestChess {
         assertSame(Player.WHITE, model.pieceAt(6, 2).player());
         assertSame(Player.WHITE, model.currentPlayer());
 
+        model = new ChessModel();
+        model.setPiece(6,3, null);
+        move = new Move(7, 3, 4, 3);
+        model.move(move);
+        assertSame("Queen", model.pieceAt(4,3).type());
+        move = new Move(7, 2, 5, 4);
+        model.move(move);
+        assertSame("Bishop", model.pieceAt(5, 4).type());
+
+    }
+
+    @Test
+    public void testChessModelCanPromote() {
+        ChessModel model = new ChessModel();
+
         model.setPiece(0,5,null);
         model.setPiece(1,5,new Pawn(Player.WHITE));
 
-        move = new Move(1,5,0,5);
+        Move move = new Move(1,5,0,5);
 
         model.move(move);
 
@@ -480,8 +495,6 @@ public class TestChess {
         assertNull(model.pieceAt(0,5));
         assertSame("Pawn", model.pieceAt(1,5).type());
 
-        model.move(move);
-
         model.setPiece(7,5,null);
         model.setPiece(6,5,new Pawn(Player.BLACK));
 
@@ -491,22 +504,26 @@ public class TestChess {
 
         assertSame("Queen", model.pieceAt(7,5).type());
 
+        model.undo();
+
+        assertNull(model.pieceAt(7, 5));
+        assertSame("Pawn", model.pieceAt(6,5).type());
     }
 
     @Test
-    public void TestChessModelInCheck() {
+    public void testChessModelInCheck() {
         ChessModel model = new ChessModel();
 
         model.setPiece(6, 4, null);
 
-        model.setPiece(3, 4, new Rook(Player.BLACK));
+        model.setPiece(3, 4, new Queen(Player.BLACK));
 
         assertTrue(model.inCheck(Player.WHITE));
         assertFalse(model.inCheck(Player.BLACK));
     }
 
     @Test
-    public void TestChessModelIsComplete() {
+    public void testChessModelIsComplete() {
         ChessModel model = new ChessModel();
 
         assertFalse(model.isComplete());
@@ -529,6 +546,67 @@ public class TestChess {
 
         assertTrue(model.isComplete());
 
+    }
+
+    @Test
+    public void testChessModelEnPassant() {
+        ChessModel model = new ChessModel();
+
+        model.setPiece(4,3, new Pawn(Player.BLACK));
+        Move move = new Move(6, 2, 4, 2);
+        model.move(move);
+        move = new Move(4, 3, 5, 2);
+        model.move(move);
+        assertNull(model.pieceAt(4, 2));
+        assertSame("Pawn", model.pieceAt(5, 2).type());
+
+        model = new ChessModel();
+
+        model.setPiece(4,3, new Rook(Player.BLACK));
+        move = new Move(6, 2, 4, 2);
+        model.move(move);
+        move = new Move(4, 3, 5, 2);
+        assertFalse(model.isValidMove(move));
+
+        model = new ChessModel();
+
+        model.setPiece(4,3, new Pawn(Player.BLACK));
+        move = new Move(6, 4, 4, 4);
+        model.move(move);
+        move = new Move(4, 3, 5, 4);
+        model.move(move);
+        assertNull(model.pieceAt(4, 4));
+        assertSame("Pawn", model.pieceAt(5, 4).type());
+
+        model = new ChessModel();
+
+        model.setPiece(3,3, new Pawn(Player.WHITE));
+        model.setNextPlayer();
+        move = new Move(1, 4, 3, 4);
+        model.move(move);
+        move = new Move(3, 3, 2, 4);
+        model.move(move);
+        assertNull(model.pieceAt(3, 4));
+        assertSame("Pawn", model.pieceAt(2, 4).type());
+
+        model = new ChessModel();
+
+        model.setPiece(3,3, new Pawn(Player.WHITE));
+        model.setNextPlayer();
+        move = new Move(1, 2, 3, 2);
+        model.move(move);
+        move = new Move(3, 3, 2, 2);
+        model.move(move);
+        assertNull(model.pieceAt(3, 2));
+        assertSame("Pawn", model.pieceAt(2, 2).type());
+        model.undo();
+        assertTrue(model.isValidMove(move));
+
+    }
+
+    @Test
+    public void testCastling() {
+        // add tests here
     }
 
 }
