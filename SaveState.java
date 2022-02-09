@@ -4,11 +4,15 @@ public class SaveState {
     public Move move;
     public IChessPiece fromPiece;
     public IChessPiece toPiece;
+    public boolean wasEnPassant;
+    public boolean wasCastling;
 
     public SaveState (Move move, IChessPiece[][] board) {
         this.move = move;
         this.fromPiece = copy(move.fromRow, move.fromColumn, board);
         this.toPiece = copy(move.toRow, move.toColumn, board);
+        wasEnPassant = false;
+        wasCastling = false;
     }
 
     public IChessPiece copy(int row, int col, IChessPiece[][] board) {
@@ -31,5 +35,13 @@ public class SaveState {
             }
         }
         return null;
+    }
+
+    public void setWasCastling(boolean wasCastling) {
+        this.wasCastling = wasCastling;
+    }
+
+    public void setEnPassant(boolean v) {
+        wasEnPassant = v;
     }
 }

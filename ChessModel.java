@@ -7,12 +7,16 @@ public class ChessModel implements IChessModel {
 	private Player player;
 	private ArrayList<SaveState> prevMoves;
 	private int turn;
+	private boolean canEnPassant;
+	private CastlingData canCastle;
 
 	public ChessModel() {
 		board = new IChessPiece[8][8];
 		player = Player.WHITE;
 		turn = 0;
 		prevMoves = new ArrayList<>(0);
+		canEnPassant = false;
+		canCastle = new CastlingData();
 
 		board[7][0] = new Rook(Player.WHITE);
 		board[7][1] = new Knight(Player.WHITE);
@@ -35,8 +39,8 @@ public class ChessModel implements IChessModel {
 		board[0][0] = new Rook(Player.BLACK);
 		board[0][1] = new Knight(Player.BLACK);
 		board[0][2] = new Bishop(Player.BLACK);
-		board[0][3] = new King(Player.BLACK);
-		board[0][4] = new Queen(Player.BLACK);
+		board[0][3] = new Queen(Player.BLACK);
+		board[0][4] = new King(Player.BLACK);
 		board[0][5] = new Bishop(Player.BLACK);
 		board[0][6] = new Knight(Player.BLACK);
 		board[0][7] = new Rook(Player.BLACK);
@@ -128,17 +132,18 @@ public class ChessModel implements IChessModel {
 		boolean valid = false;
 
 		if (board[move.fromRow][move.fromColumn] != null
-				&& board[move.fromRow][move.fromColumn].
-					isValidMove(move, board)
 				&& board[move.fromRow][move.fromColumn].player()
 					== player) {
-			SaveState prevState = new SaveState(move, board);
-			tryMove(move);
-			if (!inCheck(player)) {
-				valid = true;
+			if (isEnPassant(move, board) || board[move.fromRow][move.fromColumn].
+					isValidMove(move, board) || isValidCastling(move, board)) {
+				SaveState prevState = new SaveState(move, board);
+				tryMove(move);
+				if (!inCheck(player)) {
+					valid = true;
+				}
+				board[prevState.move.fromRow][prevState.move.fromColumn] = prevState.fromPiece;
+				board[prevState.move.toRow][prevState.move.toColumn] = prevState.toPiece;
 			}
-			board[prevState.move.fromRow][prevState.move.fromColumn] = prevState.fromPiece;
-			board[prevState.move.toRow][prevState.move.toColumn] = prevState.toPiece;
 		}
 
 		return valid;
@@ -164,28 +169,64 @@ public class ChessModel implements IChessModel {
 			throw new IndexOutOfBoundsException();
 		}
 
-		prevMoves.add(new SaveState(move, board));
-		board[move.toRow][move.toColumn] =
-				board[move.fromRow][move.fromColumn];
-		board[move.fromRow][move.fromColumn] = null;
-
-		setNextPlayer();
-		turn++;
-
-		for (int i = 0; i < 8; ++i) {
-			if (board[0][i] != null && board[7][i] != null) {
-				if (board[0][i] != null) {
-					if (board[0][i].type().equals("Pawn") &&
-							board[0][i].player().equals(Player.WHITE)) {
-						board[0][i] = new Queen(Player.WHITE);
-					}
-					if (board[7][i].type().equals("Pawn") &&
-							board[7][i].player().equals(Player.BLACK)) {
-						board[7][i] = new Queen(Player.BLACK);
-					}
+		if (isEnPassant(move, board)) {
+			prevMoves.add(new SaveState(move, board));
+			board[move.toRow][move.toColumn] =
+					board[move.fromRow][move.fromColumn];
+			board[move.fromRow][move.fromColumn] = null;
+			board[move.fromRow][move.toColumn] = null;
+			prevMoves.get(prevMoves.size()-1).setEnPassant(true);
+		}
+		else if (isValidCastling(move, board)) {
+			prevMoves.add(new SaveState(move, board));
+			if (move.fromRow == 0) {
+				if ((move.fromColumn - move.toColumn) > 0) {
+					board[0][0] = null;
+					board[0][4] = null;
+					board[0][3] = new Rook(Player.BLACK);
+					board[0][2] = new King(Player.BLACK);
+				}
+				else {
+					board[0][7] = null;
+					board[0][4] = null;
+					board[0][5] = new Rook(Player.BLACK);
+					board[0][6] = new King(Player.BLACK);
 				}
 			}
+			if (move.fromRow == 7) {
+				if ((move.fromColumn - move.toColumn) > 0) {
+					board[7][0] = null;
+					board[7][4] = null;
+					board[7][3] = new Rook(Player.WHITE);
+					board[7][2] = new King(Player.WHITE);
+				}
+				else {
+					board[7][7] = null;
+					board[7][4] = null;
+					board[7][5] = new Rook(Player.WHITE);
+					board[7][6] = new King(Player.WHITE);
+				}
+			}
+			prevMoves.get(prevMoves.size()-1).setWasCastling(true);
 		}
+		else {
+			prevMoves.add(new SaveState(move, board));
+			board[move.toRow][move.toColumn] =
+					board[move.fromRow][move.fromColumn];
+			board[move.fromRow][move.fromColumn] = null;
+		}
+		if (board[move.toRow][move.toColumn].type().equals("Pawn")
+		&& Math.abs(move.fromRow - move.toRow) == 2) {
+			canEnPassant = true;
+		}
+		else {
+			canEnPassant = false;
+		}
+
+		updateCastlingData(move, board);
+		canPromote(board);
+		setNextPlayer();
+		turn++;
 
 	}
 
@@ -242,9 +283,259 @@ public class ChessModel implements IChessModel {
 
 		board[save.move.fromRow][save.move.fromColumn] = save.fromPiece;
 		board[save.move.toRow][save.move.toColumn] = save.toPiece;
+		if (save.wasEnPassant) {
+			canEnPassant = true;
+		}
+		else {
+			canEnPassant = false;
+		}
+		if (save.wasCastling) {
+			if (save.move.fromRow == 0) {
+				canCastle.setBlackKingMoved(false);
+				if (save.move.fromColumn - save.move.toColumn > 0) {
+					canCastle.setBlackLeftRookMoved(false);
+				}
+				else {
+					canCastle.setBlackRightRookMoved(false);
+				}
+			}
+			if (save.move.fromRow == 7) {
+				canCastle.setWhiteKingMoved(false);
+				if (save.move.fromColumn - save.move.toColumn > 0) {
+					canCastle.setWhiteLeftRookMoved(false);
+				}
+				else {
+					canCastle.setWhiteRightRookMoved(false);
+				}
+			}
+		}
 		prevMoves.remove(prevMoves.size()-1);
 		turn--;
 		setNextPlayer();
+	}
+
+	public void canPromote(IChessPiece[][] board) {
+		for (int i = 0; i < 8; ++i) {
+			if (board[0][i] != null && board[7][i] != null) {
+				if (board[0][i] != null) {
+					if (board[0][i].type().equals("Pawn") &&
+							board[0][i].player().equals(Player.WHITE)) {
+						board[0][i] = new Queen(Player.WHITE);
+					}
+					if (board[7][i].type().equals("Pawn") &&
+							board[7][i].player().equals(Player.BLACK)) {
+						board[7][i] = new Queen(Player.BLACK);
+					}
+				}
+			}
+		}
+	}
+
+	public boolean isEnPassant(Move move, IChessPiece[][] board) {
+		boolean valid = false;
+		if (turn == 0) {
+			return valid;
+		}
+		SaveState lastTurn = prevMoves.get(prevMoves.size() - 1);
+		if (!canEnPassant) {
+			return valid;
+		}
+		if (!board[move.fromRow][move.fromColumn].type().equals("Pawn")) {
+			return valid;
+		}
+		if (board[move.toRow][move.toColumn] != null) {
+			return valid;
+		}
+		if (player == Player.WHITE) {
+			if (move.fromRow == 3) {
+				if (move.toColumn == lastTurn.move.fromColumn &&
+						Math.abs(move.fromColumn - move.toColumn) == 1
+						&& (move.fromRow - move.toRow) == 1) {
+					valid = true;
+				}
+			}
+		}
+		else if (player == Player.BLACK) {
+			if (move.fromRow == 5) {
+				if (move.toColumn == lastTurn.move.fromColumn &&
+						Math.abs(move.fromColumn = move.toColumn) == 1
+						&& (move.fromRow - move.toRow) == -1) {
+					valid = true;
+				}
+			}
+		}
+		return valid;
+	}
+
+	public boolean isValidCastling(Move move, IChessPiece[][] board) {
+		boolean valid = false;
+		if (inCheck(player)) {
+			return valid;
+		}
+		if (!(Math.abs(move.fromColumn - move.toColumn) == 2 &&
+				move.fromRow == move.toRow)) {
+			return valid;
+		}
+		if (player == Player.WHITE) {
+			if (canCastle.whiteKingMoved) {
+				return valid;
+			}
+			if ((move.fromColumn - move.toColumn) < 0) {
+				if (!canCastle.whiteRightRookMoved) {
+					if (board[7][5] != null || board[7][6] != null) {
+						return valid;
+					}
+					Move move1 = new Move(7, 4, 7, 5);
+					boolean move1Valid = false;
+					Move move2 = new Move(7, 4, 7, 6);
+					boolean move2Valid = false;
+					tryMove(move1);
+					if (!inCheck(player)) {
+						move1Valid = true;
+					}
+					board[move1.fromRow][move1.fromColumn] = new King(Player.WHITE);
+					board[move1.toRow][move1.toColumn] = null;
+					tryMove(move2);
+					if (!inCheck(player)) {
+						move2Valid = true;
+					}
+					board[move2.fromRow][move2.fromColumn] = new King(Player.WHITE);
+					board[move2.toRow][move2.toColumn] = null;
+					if (move1Valid && move2Valid) {
+						valid = true;
+					}
+				}
+			}
+			if ((move.fromColumn - move.toColumn) > 0) {
+				if (!canCastle.whiteLeftRookMoved) {
+					if (board[7][3] != null || board[7][2] != null || board[7][1] != null) {
+						return valid;
+					}
+					Move move1 = new Move(7, 4, 7, 3);
+					boolean move1Valid = false;
+					Move move2 = new Move(7, 4, 7, 2);
+					boolean move2Valid = false;
+					Move move3 = new Move(7, 4, 7, 1);
+					boolean move3Valid = false;
+					tryMove(move1);
+					if (!inCheck(player)) {
+						move1Valid = true;
+					}
+					board[move1.fromRow][move1.fromColumn] = new King(Player.WHITE);
+					board[move1.toRow][move1.toColumn] = null;
+					tryMove(move2);
+					if (!inCheck(player)) {
+						move2Valid = true;
+					}
+					board[move2.fromRow][move2.fromColumn] = new King(Player.WHITE);
+					board[move2.toRow][move2.toColumn] = null;
+					tryMove(move3);
+					if (!inCheck(player)) {
+						move3Valid = true;
+					}
+					board[move3.fromRow][move3.fromColumn] = new King(Player.WHITE);
+					board[move3.toRow][move3.toColumn] = null;
+					if (move1Valid && move2Valid && move3Valid) {
+						valid = true;
+					}
+				}
+			}
+		}
+
+		if (player == Player.BLACK) {
+			if (canCastle.blackKingMoved) {
+				return valid;
+			}
+			if ((move.fromColumn - move.toColumn) < 0) {
+				if (!canCastle.blackRightRookMoved) {
+					if (board[7][5] != null || board[7][6] != null) {
+						return valid;
+					}
+					Move move1 = new Move(0, 4, 0, 5);
+					boolean move1Valid = false;
+					Move move2 = new Move(0, 4, 0, 6);
+					boolean move2Valid = false;
+					tryMove(move1);
+					if (!inCheck(player)) {
+						move1Valid = true;
+					}
+					board[move1.fromRow][move1.fromColumn] = new King(Player.BLACK);
+					board[move1.toRow][move1.toColumn] = null;
+					tryMove(move2);
+					if (!inCheck(player)) {
+						move2Valid = true;
+					}
+					board[move2.fromRow][move2.fromColumn] = new King(Player.BLACK);
+					board[move2.toRow][move2.toColumn] = null;
+					if (move1Valid && move2Valid) {
+						valid = true;
+					}
+				}
+			}
+			if ((move.fromColumn - move.toColumn) > 0) {
+				if (!canCastle.blackLeftRookMoved) {
+					if (board[0][3] != null || board[0][2] != null || board[0][1] != null) {
+						return valid;
+					}
+					Move move1 = new Move(0, 4, 0, 3);
+					boolean move1Valid = false;
+					Move move2 = new Move(0, 4, 0, 2);
+					boolean move2Valid = false;
+					Move move3 = new Move(0, 4, 0, 1);
+					boolean move3Valid = false;
+					tryMove(move1);
+					if (!inCheck(player)) {
+						move1Valid = true;
+					}
+					board[move1.fromRow][move1.fromColumn] = new King(Player.BLACK);
+					board[move1.toRow][move1.toColumn] = null;
+					tryMove(move2);
+					if (!inCheck(player)) {
+						move2Valid = true;
+					}
+					board[move2.fromRow][move2.fromColumn] = new King(Player.BLACK);
+					board[move2.toRow][move2.toColumn] = null;
+					tryMove(move3);
+					if (!inCheck(player)) {
+						move3Valid = true;
+					}
+					board[move3.fromRow][move3.fromColumn] = new King(Player.BLACK);
+					board[move3.toRow][move3.toColumn] = null;
+					if (move1Valid && move2Valid && move3Valid) {
+						valid = true;
+					}
+				}
+			}
+		}
+
+		return valid;
+	}
+
+	public void updateCastlingData(Move move, IChessPiece[][] board) {
+		if (move.fromRow == 0 && move.fromColumn == 0 &&
+				board[move.toRow][move.toColumn].type().equals("Rook")) {
+			canCastle.setBlackLeftRookMoved(true);
+		}
+		else if (move.fromRow == 0 && move.fromColumn == 7 &&
+				board[move.toRow][move.toColumn].type().equals("Rook")) {
+			canCastle.setBlackRightRookMoved(true);
+		}
+		else if (move.fromRow == 0 && move.fromColumn == 4 &&
+				board[move.toRow][move.toColumn].type().equals("King")) {
+			canCastle.setBlackKingMoved(true);
+		}
+		else if (move.fromRow == 7 && move.fromColumn == 0 &&
+				board[move.toRow][move.toColumn].type().equals("Rook")) {
+			canCastle.setWhiteLeftRookMoved(true);
+		}
+		else if (move.fromRow == 7 && move.fromColumn == 7 &&
+				board[move.toRow][move.toColumn].type().equals("Rook")) {
+			canCastle.setWhiteRightRookMoved(true);
+		}
+		else if (move.fromRow == 7 && move.fromColumn == 4 &&
+				board[move.toRow][move.toColumn].type().equals("King")) {
+			canCastle.setWhiteKingMoved(true);
+		}
 	}
 
 	/******************************************************************
