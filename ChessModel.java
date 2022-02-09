@@ -2,14 +2,40 @@ package Project2;
 
 import java.util.ArrayList;
 
+/**********************************************************************
+ * @author Dan Dietsche
+ * CIS 163 Winter 2022
+ * Project 2
+ *
+ * ChessModel class, uses varoius piece Class logic to play a full game
+ * of chess
+ *
+ */
 public class ChessModel implements IChessModel {
+
+	/** array of arrays that represents the chess board */
 	private IChessPiece[][] board;
+
+	/** current player */
 	private Player player;
-	private ArrayList<SaveState> prevMoves;
+
+	/** keeps track of what turn it is */
 	private int turn;
+
+	/** array of SaveStates that holds relevant data for all prior
+	 *  moves */
+	private ArrayList<SaveState> prevMoves;
+
+	/** keeps track of if an en passant move can be done this turn */
 	private boolean canEnPassant;
+
+	/** holds all data on if castling can be done */
 	private CastlingData canCastle;
 
+	/******************************************************************
+	 * default constructor. sets up board and instantiates variables
+	 *
+	 */
 	public ChessModel() {
 		board = new IChessPiece[8][8];
 		player = Player.WHITE;
@@ -64,11 +90,18 @@ public class ChessModel implements IChessModel {
 	public boolean isComplete() {
 		boolean valid = true;
 		Move test;
-		Player p = this.player;
-		// check if current player is in check
-		if (!inCheck(p)) {
+		Player p;
+		// check which player is in check
+		if (inCheck(player)) {
+			p = player;
+		}
+		else if (inCheck(player.next())) {
+			p = player.next();
+		}
+		else {
 			return false;
 		}
+
 
 		// go through rows
 		for (int a = 0; a < 8; ++a) {
@@ -84,9 +117,8 @@ public class ChessModel implements IChessModel {
 							test = new Move(a, b, c, d);
 							// see if new move is valid
 							if (board[a][b].isValidMove(test, board)) {
-								SaveState prevState = new SaveState(test, board);
 								// try move
-								tryMove(test);
+								move(test);
 								// check if player is still in check
 								// if not, set valid to false and break
 								// nested loops
@@ -95,8 +127,7 @@ public class ChessModel implements IChessModel {
 									a = b = c = d = 8;
 								}
 								// reset board after test
-								board[prevState.move.fromRow][prevState.move.fromColumn] = prevState.fromPiece;
-								board[prevState.move.toRow][prevState.move.toColumn] = prevState.toPiece;
+								undo();
 							}
 						}
 					}
@@ -110,7 +141,8 @@ public class ChessModel implements IChessModel {
 	/******************************************************************
 	 * Returns whether the piece at location
 	 * {@code [move.fromRow, move.fromColumn]} is allowed to move to
-	 * location {@code [move.fromRow, move.fromColumn]}.
+	 * location {@code [move.fromRow, move.fromColumn]}. also checks
+	 * for if move is a valid en passant or castling move
 	 *
 	 * @param move a {@link Project2.Move} object describing the
 	 *                move to be made.
@@ -122,6 +154,7 @@ public class ChessModel implements IChessModel {
 	 * 				   represent valid locations on the board.
 	 */
 	public boolean isValidMove(Move move) {
+		// checks if move is out of bounds
 		if (move.fromRow < 0 || move.fromRow > 7 || move.fromColumn < 0
 				|| move.fromColumn > 7 || move.toRow < 0
 				|| move.toRow > 7 || move.toColumn < 0
@@ -131,18 +164,25 @@ public class ChessModel implements IChessModel {
 
 		boolean valid = false;
 
+		// makes sure from location is not null and piece at from
+		// location is owned by the active player
 		if (board[move.fromRow][move.fromColumn] != null
 				&& board[move.fromRow][move.fromColumn].player()
-					== player) {
-			if (isEnPassant(move, board) || board[move.fromRow][move.fromColumn].
-					isValidMove(move, board) || isValidCastling(move, board)) {
-				SaveState prevState = new SaveState(move, board);
-				tryMove(move);
-				if (!inCheck(player)) {
+				== player) {
+			//checks if the move is valid to the piece, an en passant
+			// or castling
+			if (isEnPassant(move, board) ||
+					board[move.fromRow][move.fromColumn].
+							isValidMove(move, board) ||
+					isValidCastling(move, board)) {
+				// tries move
+				move(move);
+				// checks if move will put active player into check
+				if (!inCheck(player.next())) {
 					valid = true;
 				}
-				board[prevState.move.fromRow][prevState.move.fromColumn] = prevState.fromPiece;
-				board[prevState.move.toRow][prevState.move.toColumn] = prevState.toPiece;
+				// undoes move
+				undo();
 			}
 		}
 
@@ -152,7 +192,9 @@ public class ChessModel implements IChessModel {
 	/******************************************************************
 	 * Moves the piece from location {@code [move.fromRow,
 	 * move.fromColumn]} to location {@code [move.fromRow,
-	 * move.fromColumn]}.
+	 * move.fromColumn]}. handles special movement for en passant and
+	 * castling. then updates castling data, turn count, and active
+	 * player
 	 *
 	 * @param move a {@link Project2.Move} object describing the
 	 *               move to be made.
@@ -162,6 +204,7 @@ public class ChessModel implements IChessModel {
 	 *  			 represent valid locations on the board.
 	 */
 	public void move(Move move) {
+		// checks if move is out of bounds
 		if (move.fromRow < 0 || move.fromRow > 7 || move.fromColumn < 0
 				|| move.fromColumn > 7 || move.toRow < 0
 				|| move.toRow > 7 || move.toColumn < 0
@@ -169,25 +212,35 @@ public class ChessModel implements IChessModel {
 			throw new IndexOutOfBoundsException();
 		}
 
+		// checks if move is en passant
 		if (isEnPassant(move, board)) {
+			// saves move state to prevMoves array
 			prevMoves.add(new SaveState(move, board));
-			prevMoves.get(prevMoves.size()-1).saveCastlingData(canCastle);
+			prevMoves.get(prevMoves.size()-1).
+					saveCastlingData(canCastle);
+			// performs en passant move
 			board[move.toRow][move.toColumn] =
 					board[move.fromRow][move.fromColumn];
 			board[move.fromRow][move.fromColumn] = null;
 			board[move.fromRow][move.toColumn] = null;
+			// finishes saving board state
 			prevMoves.get(prevMoves.size()-1).setEnPassant(true);
 		}
 		else if (isValidCastling(move, board)) {
+			// saves move state to prevMoves array
 			prevMoves.add(new SaveState(move, board));
-			prevMoves.get(prevMoves.size()-1).saveCastlingData(canCastle);
+			prevMoves.get(prevMoves.size()-1).
+					saveCastlingData(canCastle);
+			// checks if black is making move
 			if (move.fromRow == 0) {
+				// checks if queenside castling
 				if ((move.fromColumn - move.toColumn) > 0) {
 					board[0][0] = null;
 					board[0][4] = null;
 					board[0][3] = new Rook(Player.BLACK);
 					board[0][2] = new King(Player.BLACK);
 				}
+				// runs kingside castling
 				else {
 					board[0][7] = null;
 					board[0][4] = null;
@@ -195,13 +248,16 @@ public class ChessModel implements IChessModel {
 					board[0][6] = new King(Player.BLACK);
 				}
 			}
+			// checks if white is making move
 			if (move.fromRow == 7) {
+				// checks if queenside castling
 				if ((move.fromColumn - move.toColumn) > 0) {
 					board[7][0] = null;
 					board[7][4] = null;
 					board[7][3] = new Rook(Player.WHITE);
 					board[7][2] = new King(Player.WHITE);
 				}
+				// runs kingside castling
 				else {
 					board[7][7] = null;
 					board[7][4] = null;
@@ -209,17 +265,24 @@ public class ChessModel implements IChessModel {
 					board[7][6] = new King(Player.WHITE);
 				}
 			}
+			// finishes saving move state
 			prevMoves.get(prevMoves.size()-1).setWasCastling(true);
 		}
+		// performs regular move if neither en passant or castling
 		else {
+			// saves move state to prevMoves array
 			prevMoves.add(new SaveState(move, board));
-			prevMoves.get(prevMoves.size()-1).saveCastlingData(canCastle);
+			prevMoves.get(prevMoves.size()-1).
+					saveCastlingData(canCastle);
+			// performs move
 			board[move.toRow][move.toColumn] =
 					board[move.fromRow][move.fromColumn];
 			board[move.fromRow][move.fromColumn] = null;
 		}
+
+		// checks if next move can be an en passant
 		if (board[move.toRow][move.toColumn].type().equals("Pawn")
-		&& Math.abs(move.fromRow - move.toRow) == 2) {
+				&& Math.abs(move.fromRow - move.toRow) == 2) {
 			canEnPassant = true;
 		}
 		else {
@@ -227,15 +290,20 @@ public class ChessModel implements IChessModel {
 		}
 
 		updateCastlingData(move, board);
-		promotionCheck(board);
+		canPromote(board);
 		setNextPlayer();
 		turn++;
 
 	}
 
+	/******************************************************************
+	 * runs the given move regardless of validity
+	 *
+	 * @param move given move
+	 */
 	private void tryMove(Move move) {
 		board[move.toRow][move.toColumn] =
-			board[move.fromRow][move.fromColumn];
+				board[move.fromRow][move.fromColumn];
 		board[move.fromRow][move.fromColumn] = null;
 	}
 
@@ -281,19 +349,36 @@ public class ChessModel implements IChessModel {
 		return valid;
 	}
 
+	/******************************************************************
+	 * undoes the previous action
+	 *
+	 */
 	public void undo() {
+		// can't undo if no moves have been done
+		if (turn == 0) {
+			return;
+		}
+
+		// looks up previous move data
 		SaveState save = prevMoves.get(prevMoves.size()-1);
 
+		//sets canCastle to saved castling data
 		canCastle = save.data;
 
-		board[save.move.fromRow][save.move.fromColumn] = save.fromPiece;
+		//sets pieces to previous spots
+		board[save.move.fromRow][save.move.fromColumn] =
+				save.fromPiece;
 		board[save.move.toRow][save.move.toColumn] = save.toPiece;
+
+		// sets canEnPassant to saved data
 		if (save.wasEnPassant) {
 			canEnPassant = true;
 		}
 		else {
 			canEnPassant = false;
 		}
+
+		// undoes castling if castling was done
 		if (save.wasCastling) {
 			if (save.move.fromRow == 0) {
 				if (save.move.fromColumn - save.move.toColumn > 0) {
@@ -316,42 +401,70 @@ public class ChessModel implements IChessModel {
 				}
 			}
 		}
+		// deletes last SaveState in prevMoves array
 		prevMoves.remove(prevMoves.size()-1);
+		// decrements turn count
 		turn--;
+		// switches player
 		setNextPlayer();
 	}
 
-	public void promotionCheck(IChessPiece[][] board) {
+	/******************************************************************
+	 * checks if there is a promotable pawn in a back row
+	 * @param board given board
+	 * @return returns true if a pawn can be promoted
+	 */
+	public boolean canPromote(IChessPiece[][] board) {
+		// checks if there is a pawn in a back row
 		for (int i = 0; i < 8; ++i) {
-				if (board[0][i] != null) {
-					if (board[0][i].type().equals("Pawn") &&
-							board[0][i].player().equals(Player.WHITE)) {
-						board[0][i] = new Queen(Player.WHITE);
-					}
+			if (board[0][i] != null) {
+				if (board[0][i].type().equals("Pawn") &&
+						board[0][i].player().equals(Player.WHITE)) {
+					return true;
 				}
-				if (board[7][i] != null) {
-					if (board[7][i].type().equals("Pawn") &&
-							board[7][i].player().equals(Player.BLACK)) {
-						board[7][i] = new Queen(Player.BLACK);
-					}
+			}
+			if (board[7][i] != null) {
+				if (board[7][i].type().equals("Pawn") &&
+						board[7][i].player().equals(Player.BLACK)) {
+					return true;
 				}
 			}
 		}
+		return false;
+	}
 
+	/******************************************************************
+	 * returns true if the move provided on the board provided is valid
+	 * en passant, false otherwise
+	 *
+	 * @param move given move
+	 * @param board given board
+	 * @return returns true if move is valid en passant
+	 */
 	public boolean isEnPassant(Move move, IChessPiece[][] board) {
 		boolean valid = false;
+		// checks if turn is zero
 		if (turn == 0) {
 			return valid;
 		}
+		// accesses the previous move data
 		SaveState lastTurn = prevMoves.get(prevMoves.size() - 1);
+		// checks if the move can be an en passant
 		if (!canEnPassant) {
 			return valid;
 		}
-		if (!board[move.fromRow][move.fromColumn].type().equals("Pawn")) {
+		// checks if the last piece to move was a pawn
+		if (!board[move.fromRow][move.fromColumn].type()
+				.equals("Pawn")) {
 			return valid;
 		}
+		// checks if player is white
 		if (player == Player.WHITE) {
+			// checks if the moving piece is in row 3 (the only row
+			// white can en passant from)
 			if (move.fromRow == 3) {
+				// checks if the pawn is moving to a spot behind the
+				// pawn that moved last turn
 				if (move.toColumn == lastTurn.move.fromColumn &&
 						Math.abs(move.fromColumn - move.toColumn) == 1
 						&& (move.fromRow - move.toRow) == 1) {
@@ -359,8 +472,13 @@ public class ChessModel implements IChessModel {
 				}
 			}
 		}
+		// checks if player is black
 		else if (player == Player.BLACK) {
+			// checks if the moving piece is in row 4 ( the only row
+			// black can en passant from)
 			if (move.fromRow == 4) {
+				// checks if the pawn is moving to a spot behind the
+				// pawn that moved last turn
 				if (move.toColumn == lastTurn.move.fromColumn &&
 						Math.abs(move.fromColumn - move.toColumn) == 1
 						&& (move.fromRow - move.toRow) == -1) {
@@ -371,24 +489,42 @@ public class ChessModel implements IChessModel {
 		return valid;
 	}
 
+	/******************************************************************
+	 * returns true if the move provided on the board provided is valid
+	 * castling, false otherwise
+	 *
+	 * @param move move data
+	 * @param board board data
+	 * @return returns true if move is valid castling
+	 */
 	public boolean isValidCastling(Move move, IChessPiece[][] board) {
 		boolean valid = false;
+		// checks if player is in check (cannot castle if in check)
 		if (inCheck(player)) {
 			return valid;
 		}
+		// checks if the move is two spaces to the right or left
 		if (!(Math.abs(move.fromColumn - move.toColumn) == 2 &&
 				move.fromRow == move.toRow)) {
 			return valid;
 		}
+		// checks white logic
 		if (player == Player.WHITE) {
+			// checks if the white king has moved this game
 			if (canCastle.whiteKingMoved) {
 				return valid;
 			}
+			// logic if movement is to right
 			if ((move.fromColumn - move.toColumn) < 0) {
+				// checks if white rook has moved this game
 				if (!canCastle.whiteRightRookMoved) {
+					// checks that the spaces between the rook and king
+					// are empty
 					if (board[7][5] != null || board[7][6] != null) {
 						return valid;
 					}
+					// checks that the king would not be in check in
+					// either of the spaces it is moving through
 					Move move1 = new Move(7, 4, 7, 5);
 					boolean move1Valid = false;
 					Move move2 = new Move(7, 4, 7, 6);
@@ -397,64 +533,76 @@ public class ChessModel implements IChessModel {
 					if (!inCheck(player)) {
 						move1Valid = true;
 					}
-					board[move1.fromRow][move1.fromColumn] = new King(Player.WHITE);
+					board[move1.fromRow][move1.fromColumn] =
+							new King(Player.WHITE);
 					board[move1.toRow][move1.toColumn] = null;
 					tryMove(move2);
 					if (!inCheck(player)) {
 						move2Valid = true;
 					}
-					board[move2.fromRow][move2.fromColumn] = new King(Player.WHITE);
+					board[move2.fromRow][move2.fromColumn] =
+							new King(Player.WHITE);
 					board[move2.toRow][move2.toColumn] = null;
 					if (move1Valid && move2Valid) {
 						valid = true;
 					}
 				}
 			}
+			// logic if movement is to left
 			if ((move.fromColumn - move.toColumn) > 0) {
+				// checks if left rook has moved this game
 				if (!canCastle.whiteLeftRookMoved) {
-					if (board[7][3] != null || board[7][2] != null || board[7][1] != null) {
+					// checks that the spaces between the rook and king
+					// are empty
+					if (board[7][3] != null || board[7][2] != null
+							|| board[7][1] != null) {
 						return valid;
 					}
+					// checks that the king would not be in check in
+					// either of the spaces it is moving through
 					Move move1 = new Move(7, 4, 7, 3);
 					boolean move1Valid = false;
 					Move move2 = new Move(7, 4, 7, 2);
 					boolean move2Valid = false;
-					Move move3 = new Move(7, 4, 7, 1);
-					boolean move3Valid = false;
 					tryMove(move1);
 					if (!inCheck(player)) {
 						move1Valid = true;
 					}
-					board[move1.fromRow][move1.fromColumn] = new King(Player.WHITE);
+					board[move1.fromRow][move1.fromColumn] =
+							new King(Player.WHITE);
 					board[move1.toRow][move1.toColumn] = null;
+
 					tryMove(move2);
 					if (!inCheck(player)) {
 						move2Valid = true;
 					}
-					board[move2.fromRow][move2.fromColumn] = new King(Player.WHITE);
+					board[move2.fromRow][move2.fromColumn] =
+							new King(Player.WHITE);
 					board[move2.toRow][move2.toColumn] = null;
-					tryMove(move3);
-					if (!inCheck(player)) {
-						move3Valid = true;
-					}
-					board[move3.fromRow][move3.fromColumn] = new King(Player.WHITE);
-					board[move3.toRow][move3.toColumn] = null;
-					if (move1Valid && move2Valid && move3Valid) {
+
+					if (move1Valid && move2Valid) {
 						valid = true;
 					}
 				}
 			}
 		}
-
+		// logic for if player is black
 		if (player == Player.BLACK) {
+			// checks if king has moved this game
 			if (canCastle.blackKingMoved) {
 				return valid;
 			}
+			// logic if movement is to right
 			if ((move.fromColumn - move.toColumn) < 0) {
+				// checks if right rook has moved this game
 				if (!canCastle.blackRightRookMoved) {
+					// checks that the spaces between the king and rook
+					// are empty
 					if (board[0][5] != null || board[0][6] != null) {
 						return valid;
 					}
+					// checks that the king would not be in check in
+					// either of the spaces it is moving through
 					Move move1 = new Move(0, 4, 0, 5);
 					boolean move1Valid = false;
 					Move move2 = new Move(0, 4, 0, 6);
@@ -463,49 +611,53 @@ public class ChessModel implements IChessModel {
 					if (!inCheck(player)) {
 						move1Valid = true;
 					}
-					board[move1.fromRow][move1.fromColumn] = new King(Player.BLACK);
+					board[move1.fromRow][move1.fromColumn] =
+							new King(Player.BLACK);
 					board[move1.toRow][move1.toColumn] = null;
 					tryMove(move2);
 					if (!inCheck(player)) {
 						move2Valid = true;
 					}
-					board[move2.fromRow][move2.fromColumn] = new King(Player.BLACK);
+					board[move2.fromRow][move2.fromColumn] =
+							new King(Player.BLACK);
 					board[move2.toRow][move2.toColumn] = null;
 					if (move1Valid && move2Valid) {
 						valid = true;
 					}
 				}
 			}
+			// logic if movement is to left
 			if ((move.fromColumn - move.toColumn) > 0) {
+				// checks if left rook has moved this game
 				if (!canCastle.blackLeftRookMoved) {
-					if (board[0][3] != null || board[0][2] != null || board[0][1] != null) {
+					// checks that the spaces between the king and rook
+					// are empty
+					if (board[0][3] != null || board[0][2] != null ||
+							board[0][1] != null) {
 						return valid;
 					}
+					// checks that the king would not be in check in
+					// either of the spaces it is moving through
 					Move move1 = new Move(0, 4, 0, 3);
 					boolean move1Valid = false;
 					Move move2 = new Move(0, 4, 0, 2);
 					boolean move2Valid = false;
-					Move move3 = new Move(0, 4, 0, 1);
-					boolean move3Valid = false;
 					tryMove(move1);
 					if (!inCheck(player)) {
 						move1Valid = true;
 					}
-					board[move1.fromRow][move1.fromColumn] = new King(Player.BLACK);
+					board[move1.fromRow][move1.fromColumn] =
+							new King(Player.BLACK);
 					board[move1.toRow][move1.toColumn] = null;
 					tryMove(move2);
 					if (!inCheck(player)) {
 						move2Valid = true;
 					}
-					board[move2.fromRow][move2.fromColumn] = new King(Player.BLACK);
+					board[move2.fromRow][move2.fromColumn] =
+							new King(Player.BLACK);
 					board[move2.toRow][move2.toColumn] = null;
-					tryMove(move3);
-					if (!inCheck(player)) {
-						move3Valid = true;
-					}
-					board[move3.fromRow][move3.fromColumn] = new King(Player.BLACK);
-					board[move3.toRow][move3.toColumn] = null;
-					if (move1Valid && move2Valid && move3Valid) {
+
+					if (move1Valid && move2Valid) {
 						valid = true;
 					}
 				}
@@ -515,6 +667,13 @@ public class ChessModel implements IChessModel {
 		return valid;
 	}
 
+	/******************************************************************
+	 * updates if the kings or rooks have moved from their starting
+	 * position
+	 *
+	 * @param move move data
+	 * @param board board state
+	 */
 	public void updateCastlingData(Move move, IChessPiece[][] board) {
 		if (move.fromRow == 0 && move.fromColumn == 0 &&
 				board[move.toRow][move.toColumn].type().equals("Rook")) {

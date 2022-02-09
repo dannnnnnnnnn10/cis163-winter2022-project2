@@ -6,6 +6,7 @@ import static org.junit.Assert.*;
 
 public class TestChess {
 
+    // tests ChessPiece isValidMove logic
     @Test
     public void testChessPiece() {
         IChessPiece[][] board = new IChessPiece[8][8];
@@ -24,6 +25,7 @@ public class TestChess {
 
     }
 
+    // tests ChessPiece giving oob logic
     @Test(expected = IndexOutOfBoundsException.class)
     public void testChessPieceOOB() {
         IChessPiece[][] board = new IChessPiece[8][8];
@@ -35,6 +37,7 @@ public class TestChess {
         board[6][2].isValidMove(move, board);
     }
 
+    //tests ChessPiece giving illegal argument
     @Test(expected = IllegalArgumentException.class)
     public void testChessPieceIllegalArg() {
         IChessPiece[][] board = new IChessPiece[8][8];
@@ -379,6 +382,7 @@ public class TestChess {
         assertFalse(board[3][2].isValidMove(move, board));
     }
 
+    // test simple model methods
     @Test
     public void testChessModelSimple() {
         ChessModel model = new ChessModel();
@@ -398,6 +402,7 @@ public class TestChess {
         assertSame(Player.WHITE, model.pieceAt(4, 3).player());
     }
 
+    // test if moves are OOB
     @Test(expected = IndexOutOfBoundsException.class)
     public void testChessModelIsValidMoveOOB() {
         ChessModel model = new ChessModel();
@@ -408,6 +413,7 @@ public class TestChess {
 
     }
 
+    // tests basic isValidMove method
     @Test
     public void testChessModelIsValidMove() {
         ChessModel model = new ChessModel();
@@ -437,6 +443,7 @@ public class TestChess {
         assertFalse(model.isValidMove(move));
     }
 
+    // tests move with OOB move data
     @Test(expected = IndexOutOfBoundsException.class)
     public void testChessModelMoveOOB() {
         ChessModel model = new ChessModel();
@@ -447,6 +454,7 @@ public class TestChess {
 
     }
 
+    // tests basic move and undo functionality
     @Test
     public void testChessModelMoveAndUndo() {
         ChessModel model = new ChessModel();
@@ -477,39 +485,7 @@ public class TestChess {
 
     }
 
-    @Test
-    public void testChessModelCanPromote() {
-        ChessModel model = new ChessModel();
-
-        model.setPiece(0,5,null);
-        model.setPiece(1,5,new Pawn(Player.WHITE));
-
-        Move move = new Move(1,5,0,5);
-
-        model.move(move);
-
-        assertSame("Queen", model.pieceAt(0,5).type());
-
-        model.undo();
-
-        assertNull(model.pieceAt(0,5));
-        assertSame("Pawn", model.pieceAt(1,5).type());
-
-        model.setPiece(7,5,null);
-        model.setPiece(6,5,new Pawn(Player.BLACK));
-
-        move = new Move(6,5,7,5);
-
-        model.move(move);
-
-        assertSame("Queen", model.pieceAt(7,5).type());
-
-        model.undo();
-
-        assertNull(model.pieceAt(7, 5));
-        assertSame("Pawn", model.pieceAt(6,5).type());
-    }
-
+    // tests inCheck method
     @Test
     public void testChessModelInCheck() {
         ChessModel model = new ChessModel();
@@ -522,6 +498,7 @@ public class TestChess {
         assertFalse(model.inCheck(Player.BLACK));
     }
 
+    // tests isComplete method
     @Test
     public void testChessModelIsComplete() {
         ChessModel model = new ChessModel();
@@ -546,8 +523,13 @@ public class TestChess {
 
         assertTrue(model.isComplete());
 
+        model.setNextPlayer();
+
+        assertTrue(model.isComplete());
+
     }
 
+    // tests logic in isEnPassant, isValidMove, move, and undo
     @Test
     public void testChessModelEnPassant() {
         ChessModel model = new ChessModel();
@@ -604,6 +586,7 @@ public class TestChess {
 
     }
 
+    // tests logic in isCastling, isValidMove, move, and undo
     @Test
     public void testCastling() {
         ChessModel model = new ChessModel();
