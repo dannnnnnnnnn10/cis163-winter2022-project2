@@ -171,6 +171,7 @@ public class ChessModel implements IChessModel {
 
 		if (isEnPassant(move, board)) {
 			prevMoves.add(new SaveState(move, board));
+			prevMoves.get(prevMoves.size()-1).saveCastlingData(canCastle);
 			board[move.toRow][move.toColumn] =
 					board[move.fromRow][move.fromColumn];
 			board[move.fromRow][move.fromColumn] = null;
@@ -179,6 +180,7 @@ public class ChessModel implements IChessModel {
 		}
 		else if (isValidCastling(move, board)) {
 			prevMoves.add(new SaveState(move, board));
+			prevMoves.get(prevMoves.size()-1).saveCastlingData(canCastle);
 			if (move.fromRow == 0) {
 				if ((move.fromColumn - move.toColumn) > 0) {
 					board[0][0] = null;
@@ -211,6 +213,7 @@ public class ChessModel implements IChessModel {
 		}
 		else {
 			prevMoves.add(new SaveState(move, board));
+			prevMoves.get(prevMoves.size()-1).saveCastlingData(canCastle);
 			board[move.toRow][move.toColumn] =
 					board[move.fromRow][move.fromColumn];
 			board[move.fromRow][move.fromColumn] = null;
@@ -281,6 +284,8 @@ public class ChessModel implements IChessModel {
 	public void undo() {
 		SaveState save = prevMoves.get(prevMoves.size()-1);
 
+		canCastle = save.data;
+
 		board[save.move.fromRow][save.move.fromColumn] = save.fromPiece;
 		board[save.move.toRow][save.move.toColumn] = save.toPiece;
 		if (save.wasEnPassant) {
@@ -291,21 +296,23 @@ public class ChessModel implements IChessModel {
 		}
 		if (save.wasCastling) {
 			if (save.move.fromRow == 0) {
-				canCastle.setBlackKingMoved(false);
 				if (save.move.fromColumn - save.move.toColumn > 0) {
-					canCastle.setBlackLeftRookMoved(false);
+					board[0][0] = new Rook(Player.BLACK);
+					board[0][3] = null;
 				}
 				else {
-					canCastle.setBlackRightRookMoved(false);
+					board[0][7] = new Rook(Player.BLACK);
+					board[0][5] = null;
 				}
 			}
 			if (save.move.fromRow == 7) {
-				canCastle.setWhiteKingMoved(false);
 				if (save.move.fromColumn - save.move.toColumn > 0) {
-					canCastle.setWhiteLeftRookMoved(false);
+					board[7][0] = new Rook(Player.WHITE);
+					board[7][3] = null;
 				}
 				else {
-					canCastle.setWhiteRightRookMoved(false);
+					board[7][7] = new Rook(Player.WHITE);
+					board[7][5] = null;
 				}
 			}
 		}
@@ -445,7 +452,7 @@ public class ChessModel implements IChessModel {
 			}
 			if ((move.fromColumn - move.toColumn) < 0) {
 				if (!canCastle.blackRightRookMoved) {
-					if (board[7][5] != null || board[7][6] != null) {
+					if (board[0][5] != null || board[0][6] != null) {
 						return valid;
 					}
 					Move move1 = new Move(0, 4, 0, 5);

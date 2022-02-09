@@ -606,7 +606,193 @@ public class TestChess {
 
     @Test
     public void testCastling() {
-        // add tests here
+        ChessModel model = new ChessModel();
+
+        model.setPiece(7,6,null);
+        model.setPiece(7,5, new Pawn(Player.BLACK));
+
+        Move move = new Move(7,4,7,6);
+
+        assertFalse(model.isValidMove(move));
+
+        model.setPiece(7,5, null);
+
+        assertTrue(model.isValidMove(move));
+
+        model.move(move);
+        assertSame("Rook", model.pieceAt(7,5).type());
+        assertSame("King", model.pieceAt(7,6).type());
+        assertNull(model.pieceAt(7,4));
+        assertNull(model.pieceAt(7,7));
+
+        model.undo();
+        assertSame("King", model.pieceAt(7,4).type());
+        assertSame("Rook", model.pieceAt(7,7).type());
+        assertNull(model.pieceAt(7,5));
+        assertNull(model.pieceAt(7,6));
+
+        model.setPiece(6,5,null);
+        model.setPiece(4,5, new Rook(Player.BLACK));
+        assertFalse(model.isValidMove(move));
+
+        model.setPiece(6,5,new Pawn(Player.WHITE));
+
+        model.setPiece(6,4, null);
+        model.setPiece(4,4, new Rook(Player.BLACK));
+        assertFalse(model.isValidMove(move));
+
+        model.setPiece(4,4, new Pawn(Player.WHITE));
+
+        move = new Move(7,4,7,5);
+        model.move(move);
+        move = new Move(7,5,7,4);
+        model.move(move);
+        move = new Move(7,4,7,6);
+        assertFalse(model.isValidMove(move));
+
+        model.undo();
+        model.undo();
+
+        move = new Move(7,7,7,5);
+        model.move(move);
+        move = new Move(7,5,7,7);
+        model.move(move);
+        move = new Move(7,4,7,6);
+        assertFalse(model.isValidMove(move));
+
+        model.undo();
+        model.undo();
+        assertTrue(model.isValidMove(move));
+
+        model = new ChessModel();
+
+        model.setPiece(7,3, null);
+        model.setPiece(7,2, null);
+        model.setPiece(7,1, new Pawn(Player.BLACK));
+
+        move = new Move(7,4,7,2);
+
+        assertFalse(model.isValidMove(move));
+
+        model.setPiece(7,1, null);
+
+        assertTrue(model.isValidMove(move));
+
+        model.move(move);
+        assertSame("Rook", model.pieceAt(7,3).type());
+        assertSame("King", model.pieceAt(7,2).type());
+        assertNull(model.pieceAt(7,4));
+        assertNull(model.pieceAt(7,0));
+
+        model.undo();
+        assertSame("King", model.pieceAt(7,4).type());
+        assertSame("Rook", model.pieceAt(7,0).type());
+        assertNull(model.pieceAt(7,3));
+        assertNull(model.pieceAt(7,2));
+
+        move = new Move(7,0,7,3);
+        model.move(move);
+        move = new Move(7,3,7,0);
+        model.move(move);
+        move = new Move(7,4,7,2);
+        assertFalse(model.isValidMove(move));
+
+        model.undo();
+        model.undo();
+        assertTrue(model.isValidMove(move));
+
+        model = new ChessModel();
+        model.setNextPlayer();
+
+        model.setPiece(0,6,null);
+        model.setPiece(0,5, new Pawn(Player.WHITE));
+
+        move = new Move(0,4,0,6);
+
+        assertFalse(model.isValidMove(move));
+
+        model.setPiece(0,5, null);
+
+        assertTrue(model.isValidMove(move));
+
+        model.move(move);
+        assertSame("Rook", model.pieceAt(0,5).type());
+        assertSame("King", model.pieceAt(0,6).type());
+        assertNull(model.pieceAt(0,4));
+        assertNull(model.pieceAt(0,7));
+
+        model.undo();
+        assertSame("King", model.pieceAt(0,4).type());
+        assertSame("Rook", model.pieceAt(0,7).type());
+        assertNull(model.pieceAt(0,5));
+        assertNull(model.pieceAt(0,6));
+
+        model.setPiece(1,5,null);
+        model.setPiece(4,5, new Rook(Player.WHITE));
+        assertFalse(model.isValidMove(move));
+
+        model.setPiece(1,5,new Pawn(Player.BLACK));
+
+        move = new Move(0,4,0,5);
+        model.move(move);
+        move = new Move(0,5,0,4);
+        model.move(move);
+        move = new Move(0,4,0,6);
+        assertFalse(model.isValidMove(move));
+
+        model.undo();
+        model.undo();
+        assertTrue(model.isValidMove(move));
+
+        move = new Move(0,7,0,5);
+        model.move(move);
+        move = new Move(0,5,0,7);
+        model.move(move);
+        move = new Move(0,4,0,6);
+        assertFalse(model.isValidMove(move));
+
+        model.undo();
+        model.undo();
+        assertTrue(model.isValidMove(move));
+
+        model = new ChessModel();
+        model.setNextPlayer();
+
+        model.setPiece(0,3, null);
+        model.setPiece(0,2, null);
+        model.setPiece(0,1, new Pawn(Player.BLACK));
+
+        move = new Move(0,4,0,2);
+
+        assertFalse(model.isValidMove(move));
+
+        model.setPiece(0,1, null);
+
+        assertTrue(model.isValidMove(move));
+
+        model.move(move);
+        assertSame("Rook", model.pieceAt(0,3).type());
+        assertSame("King", model.pieceAt(0,2).type());
+        assertNull(model.pieceAt(0,4));
+        assertNull(model.pieceAt(0,0));
+
+        model.undo();
+        assertSame("King", model.pieceAt(0,4).type());
+        assertSame("Rook", model.pieceAt(0,0).type());
+        assertNull(model.pieceAt(0,3));
+        assertNull(model.pieceAt(0,2));
+
+        move = new Move(0,0,0,3);
+        model.move(move);
+        move = new Move(0,3,0,0);
+        model.move(move);
+        move = new Move(0,4,0,2);
+        assertFalse(model.isValidMove(move));
+
+        model.undo();
+        model.undo();
+        assertTrue(model.isValidMove(move));
+
     }
 
 }

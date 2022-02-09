@@ -6,6 +6,7 @@ public class SaveState {
     public IChessPiece toPiece;
     public boolean wasEnPassant;
     public boolean wasCastling;
+    public CastlingData data;
 
     public SaveState (Move move, IChessPiece[][] board) {
         this.move = move;
@@ -13,6 +14,7 @@ public class SaveState {
         this.toPiece = copy(move.toRow, move.toColumn, board);
         wasEnPassant = false;
         wasCastling = false;
+        data = new CastlingData();
     }
 
     public IChessPiece copy(int row, int col, IChessPiece[][] board) {
@@ -44,4 +46,14 @@ public class SaveState {
     public void setEnPassant(boolean v) {
         wasEnPassant = v;
     }
+
+    public void saveCastlingData(CastlingData d) {
+        data.setBlackRightRookMoved(d.blackRightRookMoved);
+        data.setBlackLeftRookMoved(d.blackLeftRookMoved);
+        data.setBlackKingMoved(d.blackKingMoved);
+        data.setWhiteKingMoved(d.whiteKingMoved);
+        data.setWhiteLeftRookMoved(d.whiteLeftRookMoved);
+        data.setWhiteRightRookMoved(d.whiteRightRookMoved);
+    }
+
 }
