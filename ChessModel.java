@@ -290,8 +290,11 @@ public class ChessModel implements IChessModel {
 		}
 
 		updateCastlingData(move, board);
-		canPromote(board);
 		setNextPlayer();
+		// take this out once gui implements method to choose promotion
+		if (canPromote(board)) {
+			promote("Queen");
+		}
 		turn++;
 
 	}
@@ -431,6 +434,42 @@ public class ChessModel implements IChessModel {
 			}
 		}
 		return false;
+	}
+
+	/******************************************************************
+	 * promotes the first promotable pawn to the type given
+	 *
+	 * @param type string with the type to be promoted to
+	 */
+	public void promote(String type) {
+		Player p = player.next();
+		IChessPiece promotion = new Pawn(p);
+
+		switch (type) {
+			case "Rook":
+				promotion = new Rook(p);
+			case "Knight":
+				promotion = new Knight(p);
+			case "Bishop":
+				promotion = new Bishop(p);
+			case "Queen":
+				promotion = new Queen(p);
+		}
+		for (int i = 0; i < 8; ++i) {
+			if (board[0][i] != null) {
+				if (board[0][i].type().equals("Pawn") &&
+						board[0][i].player().equals(Player.WHITE)) {
+					board[0][i] = promotion;
+				}
+			}
+			if (board[7][i] != null) {
+				if (board[7][i].type().equals("Pawn") &&
+						board[7][i].player().equals(Player.BLACK)) {
+					board[7][i] = promotion;
+				}
+			}
+		}
+
 	}
 
 	/******************************************************************

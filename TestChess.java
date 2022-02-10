@@ -778,4 +778,38 @@ public class TestChess {
 
     }
 
+    // test if pawns can promote
+    @Test
+    public void testChessModelCanPromote() {
+        ChessModel model = new ChessModel();
+
+        model.setPiece(0,5,null);
+        model.setPiece(1,5,new Pawn(Player.WHITE));
+
+        Move move = new Move(1,5,0,5);
+
+        model.move(move);
+
+        assertSame("Queen", model.pieceAt(0,5).type());
+
+        model.undo();
+
+        assertNull(model.pieceAt(0,5));
+        assertSame("Pawn", model.pieceAt(1,5).type());
+
+        model.setPiece(7,5,null);
+        model.setPiece(6,5,new Pawn(Player.BLACK));
+
+        move = new Move(6,5,7,5);
+
+        model.move(move);
+
+        assertSame("Queen", model.pieceAt(7,5).type());
+
+        model.undo();
+
+        assertNull(model.pieceAt(7, 5));
+        assertSame("Pawn", model.pieceAt(6,5).type());
+    }
+
 }
