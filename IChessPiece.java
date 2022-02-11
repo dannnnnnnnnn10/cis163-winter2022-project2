@@ -1,4 +1,4 @@
-package Project2;
+package chess;
 
 public interface IChessPiece {
 	/**
