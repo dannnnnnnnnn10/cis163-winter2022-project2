@@ -1,4 +1,4 @@
-package Project2;
+package chess;
 
 import java.util.ArrayList;
 
@@ -144,7 +144,7 @@ public class ChessModel implements IChessModel {
 	 * location {@code [move.fromRow, move.fromColumn]}. also checks
 	 * for if move is a valid en passant or castling move
 	 *
-	 * @param move a {@link Project2.Move} object describing the
+	 * @param move a {@link chess.Move} object describing the
 	 *                move to be made.
 	 * @return {@code true} if the proposed move is valid,
 	 * 				  {@code false} otherwise.
@@ -196,7 +196,7 @@ public class ChessModel implements IChessModel {
 	 * castling. then updates castling data, turn count, and active
 	 * player
 	 *
-	 * @param move a {@link Project2.Move} object describing the
+	 * @param move a {@link chess.Move} object describing the
 	 *               move to be made.
 	 * @throws IndexOutOfBoundsException if either
 	 *  			 {@code [move.fromRow, move.fromColumn]} or
@@ -292,9 +292,9 @@ public class ChessModel implements IChessModel {
 		updateCastlingData(move, board);
 		setNextPlayer();
 		// take this out once gui implements method to choose promotion
-		if (canPromote(board)) {
-			promote("Queen");
-		}
+//		if (canPromote(board)) {
+//			promote("Queen");
+//		}
 		turn++;
 
 	}
@@ -312,7 +312,7 @@ public class ChessModel implements IChessModel {
 
 	/******************************************************************
 	 * Report whether the current player p is in check.
-	 * @param  p {@link Project2.Move} the Player being checked
+	 * @param  p {@link chess.Move} the Player being checked
 	 * @return {@code true} if the current player is in check,
 	 * {@code false} otherwise.
 	 */
@@ -376,6 +376,14 @@ public class ChessModel implements IChessModel {
 		// sets canEnPassant to saved data
 		if (save.wasEnPassant) {
 			canEnPassant = true;
+			if (save.fromPiece.player() == Player.BLACK) {
+				board[save.move.toRow - 1][save.move.toColumn] =
+						new Pawn(Player.WHITE);
+			}
+			else {
+				board[save.move.toRow + 1][save.move.toColumn] =
+						new Pawn(Player.BLACK);
+			}
 		}
 		else {
 			canEnPassant = false;
