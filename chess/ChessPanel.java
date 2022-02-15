@@ -12,8 +12,7 @@ public class ChessPanel extends JPanel {
     private JButton newGame;
     private JButton undo;
     private ChessModel model;
-    private JButton queen, rook, bishop, knight;
-    private JLabel promote, blank;
+    private JLabel blank;
 
     private ImageIcon wRook;
     private ImageIcon wBishop;
@@ -43,19 +42,10 @@ public class ChessPanel extends JPanel {
         board = new JButton[model.numRows()][model.numColumns()];
         newGame = new JButton("New Game");
         undo = new JButton("Undo");
-        queen = new JButton("Queen");
-        rook = new JButton("Rook");
-        bishop = new JButton("Bishop");
-        knight = new JButton("Knight");
         blank = new JLabel("");
-        promote = new JLabel("Promotions: ");
         listener = new listener();
         undo.addActionListener(listener);
         newGame.addActionListener(listener);
-        queen.addActionListener(listener);
-        rook.addActionListener(listener);
-        bishop.addActionListener(listener);
-        knight.addActionListener(listener);
         createIcons();
 
         JPanel boardpanel = new JPanel();
@@ -79,34 +69,11 @@ public class ChessPanel extends JPanel {
         buttonpanel.add(newGame);
         buttonpanel.add(undo);
         buttonpanel.add(blank);
-        buttonpanel.add(promote);
-        buttonpanel.add(queen);
-        buttonpanel.add(rook);
-        buttonpanel.add(knight);
-        buttonpanel.add(bishop);
         add(boardpanel, BorderLayout.WEST);
         boardpanel.setPreferredSize(new Dimension(600, 600));
         add(buttonpanel, BorderLayout.EAST);
         firstTurnFlag = true;
 
-        //Creates promotion pop up menu
-//        promotion = new JPopupMenu("Promotion");
-//        promotion.setPopupSize(110, 112);
-//        JMenuBar menuBar = new JMenuBar();
-//        menuBar.setLayout(new GridLayout(22, 1, 1, 1));
-//        queen = new JButton("Queen");
-//        rook = new JButton("Rook");
-//        bishop = new JButton("Bishop");
-//        knight = new JButton("Knight");
-//        menuBar.add(queen);
-//        menuBar.add(rook);
-//        menuBar.add(bishop);
-//        menuBar.add(knight);
-//        promotion.add(menuBar);
-//        queen.addActionListener(listener);
-//        rook.addActionListener(listener);
-//        bishop.addActionListener(listener);
-//        knight.addActionListener(listener);
     }
 
     private void setBackGroundColor(int r, int c) {
@@ -250,24 +217,6 @@ public class ChessPanel extends JPanel {
                 model = new ChessModel();
                 displayBoard();
             }
-//            if(model.canPromote()){
-//                if(event.getSource() == queen){
-//                    model.promote("Queen");
-//                    displayBoard();
-//                }
-//                if(event.getSource() == rook){
-//                    model.promote("Rook");
-//                    displayBoard();
-//                }
-//                if(event.getSource() == bishop){
-//                    model.promote("Bishop");
-//                    displayBoard();
-//                }
-//                if(event.getSource() == knight){
-//                    model.promote("Knight");
-//                    displayBoard();
-//                }
-//            }
             for (int r = 0; r < model.numRows(); r++)
                 for (int c = 0; c < model.numColumns(); c++)
                     if (board[r][c] == event.getSource()) {
@@ -318,3 +267,4 @@ public class ChessPanel extends JPanel {
         }
     }
 }
+
