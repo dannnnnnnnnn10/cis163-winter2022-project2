@@ -524,10 +524,6 @@ public class TestChess {
 
         assertTrue(model.isComplete());
 
-        model.setNextPlayer();
-
-        assertTrue(model.isComplete());
-
     }
 
     // tests logic in isEnPassant, isValidMove, move, and undo
@@ -791,6 +787,10 @@ public class TestChess {
 
         model.move(move);
 
+        assertTrue(model.canPromote());
+
+        model.promote("Queen");
+
         assertSame("Queen", model.pieceAt(0,5).type());
 
         model.undo();
@@ -805,7 +805,9 @@ public class TestChess {
 
         model.move(move);
 
-        assertSame("Queen", model.pieceAt(7,5).type());
+        model.promote("Bishop");
+
+        assertSame("Bishop", model.pieceAt(7,5).type());
 
         model.undo();
 

@@ -91,17 +91,6 @@ public class ChessModel implements IChessModel {
         boolean valid = true;
         Move test;
         Player p = player;
-        // check which player is in check
-        if (inCheck(player)) {
-            p = player;
-        }
-        else if (inCheck(player.next())) {
-            p = player.next();
-        }
-        else {
-            return false;
-        }
-
 
         // go through rows
         for (int a = 0; a < 8; ++a) {
@@ -116,18 +105,9 @@ public class ChessModel implements IChessModel {
                             // make new move
                             test = new Move(a, b, c, d);
                             // see if new move is valid
-                            if (board[a][b].isValidMove(test, board)) {
-                                // try move
-                                move(test);
-                                // check if player is still in check
-                                // if not, set valid to false and break
-                                // nested loops
-                                if (!inCheck(p)){
-                                    valid = false;
-                                    a = b = c = d = 8;
-                                }
-                                // reset board after test
-                                undo();
+                            if (isValidMove(test)) {
+                                valid = false;
+                                a = b = c = d = 8;
                             }
                         }
                     }
