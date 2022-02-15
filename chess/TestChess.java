@@ -538,6 +538,8 @@ public class TestChess {
         model.move(move);
         assertNull(model.pieceAt(4, 2));
         assertSame("Pawn", model.pieceAt(5, 2).type());
+        model.undo();
+        assertTrue(model.isValidMove(move));
 
         model = new ChessModel();
 
@@ -780,6 +782,8 @@ public class TestChess {
     public void testChessModelCanPromote() {
         ChessModel model = new ChessModel();
 
+        assertFalse(model.canPromote());
+
         model.setPiece(0,5,null);
         model.setPiece(1,5,new Pawn(Player.WHITE));
 
@@ -798,6 +802,12 @@ public class TestChess {
         assertNull(model.pieceAt(0,5));
         assertSame("Pawn", model.pieceAt(1,5).type());
 
+        model.move(move);
+
+        model.promote("Knight");
+
+        assertSame("Knight", model.pieceAt(0,5).type());
+
         model.setPiece(7,5,null);
         model.setPiece(6,5,new Pawn(Player.BLACK));
 
@@ -805,6 +815,7 @@ public class TestChess {
 
         model.move(move);
 
+        assertTrue(model.canPromote());
         model.promote("Bishop");
 
         assertSame("Bishop", model.pieceAt(7,5).type());
@@ -813,6 +824,14 @@ public class TestChess {
 
         assertNull(model.pieceAt(7, 5));
         assertSame("Pawn", model.pieceAt(6,5).type());
+
+        model.move(move);
+
+        model.promote("Rook");
+
+        assertSame("Rook", model.pieceAt(7,5).type());
+
+
     }
 
     //Tests movements for king
