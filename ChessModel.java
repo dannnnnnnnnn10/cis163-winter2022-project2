@@ -22,8 +22,7 @@ public class ChessModel implements IChessModel {
     /** keeps track of what turn it is */
     private int turn;
 
-    /** array of SaveStates that holds relevant data for all prior
-     *  moves */
+    /** array of SaveStates that holds data for all prior moves */
     private ArrayList<SaveState> prevMoves;
 
     /** keeps track of if an en passant move can be done this turn */
