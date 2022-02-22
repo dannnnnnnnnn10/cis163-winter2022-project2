@@ -900,7 +900,9 @@ public class ChessModel implements IChessModel {
     }
 
     /******************************************************************
-     * logic for if black piece is under attack
+     * logic for if black piece is under attack. will perform a move if
+     * the piece being attacked can be protected without sacrificing
+     * the defending piece
      *
      * @return returns true if move was performed
      */
@@ -1014,9 +1016,10 @@ public class ChessModel implements IChessModel {
     }
 
     /******************************************************************
-     * logic if black can take a piece no matter what
+     * logic if black can take a piece. will not make the attack if the
+     * piece will then be under attack
      *
-     * @return returns true if move is performed
+     * @return returns true if move is made
      */
     private boolean attackOpponent() {
 
@@ -1060,6 +1063,12 @@ public class ChessModel implements IChessModel {
         return false;
     }
 
+    /******************************************************************
+     * logic to move the queen as far down-right as possible, without
+     * it being under attack after the move.
+     *
+     * @return returns true if move is made
+     */
     private boolean releaseTheQueen() {
         Move test;
         //go through rows
@@ -1099,9 +1108,10 @@ public class ChessModel implements IChessModel {
 
     /******************************************************************
      * logic to find a pawn in the starting pawn row and move it
-     * forward
+     * forward. starts checking on the right side, moves to left, will
+     * move the piece as far down as possible
      *
-     * @return returns true if a move is performed
+     * @return returns true if move is made
      */
     private boolean pushTheRanks() {
         Move test;
@@ -1138,6 +1148,12 @@ public class ChessModel implements IChessModel {
     return false;
     }
 
+    /******************************************************************
+     * moves the upper-left most piece as far down-right as possible.
+     * does not attempt the move if it will be captured
+     *
+     * @return returns true if move is made
+     */
     private boolean moveSomethingOtherThanTheKing() {
         Move test;
         for (int a = 0; a < 8; ++a) {
@@ -1175,6 +1191,13 @@ public class ChessModel implements IChessModel {
         return false;
     }
 
+    /******************************************************************
+     * logic to move a piece other than the king, regardless of if it
+     * will get captured. the ai needs to make a move, in the end. will
+     * move the upper-left most piece as far down-right as possible
+     *
+     * @return returns true if move is made
+     */
     private boolean okayGottaMakeAnActualMove() {
         Move test;
         for (int a = 0; a < 8; ++a) {
@@ -1207,7 +1230,8 @@ public class ChessModel implements IChessModel {
 
     /******************************************************************
      * logic to move the king if no other piece can move. this will
-     * move the king to the top left of the board
+     * move the king to the top left of the board. will move the king
+     * to the upper-left corner
      *
      */
     public void moveKing() {
@@ -1239,6 +1263,12 @@ public class ChessModel implements IChessModel {
         }
     }
 
+    /******************************************************************
+     * checks to see if given move puts piece in risk of being captured
+     *
+     * @param move move just performed
+     * @return returns true if piece is in threat
+     */
     private boolean movedIntoThreat(Move move) {
         Move test;
         // go through rows
