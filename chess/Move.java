@@ -11,7 +11,7 @@ public class Move {
 		this.fromColumn = fromColumn;
 		this.toRow = toRow;
 		this.toColumn = toColumn;
-	}
+ 	}
 
 	@Override
 	public String toString() {

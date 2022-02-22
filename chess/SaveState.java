@@ -1,8 +1,9 @@
 package chess;
 
 /**********************************************************************
- * @author Dan Dietsche
+ * @author Dan Dietsche, Kyle Scott, Joseph Lentine
  * CIS 163 Winter 2022
+ * 2/21/2022
  * Project 2
  *
  * holds move data, copies of the to and from pieces, if the move was

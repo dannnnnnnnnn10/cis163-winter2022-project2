@@ -3,8 +3,9 @@ package chess;
 import java.util.ArrayList;
 
 /**********************************************************************
- * @author Dan Dietsche
+ * @author Dan Dietsche, Kyle Scott, Joseph Lentine
  * CIS 163 Winter 2022
+ * 2/21/22
  * Project 2
  *
  * ChessModel class, uses varoius piece Class logic to play a full game
@@ -702,29 +703,23 @@ public class ChessModel implements IChessModel {
      */
     public void updateCastlingData(Move move, IChessPiece[][] board) {
         if (move.fromRow == 0 && move.fromColumn == 0 &&
-                board[move.toRow][move.toColumn].type().equals("Rook")) {
-            canCastle.setBlackLeftRookMoved(true);
-        }
+                board[move.toRow][move.toColumn].type().equals("Rook"))
+        { canCastle.setBlackLeftRookMoved(true); }
         else if (move.fromRow == 0 && move.fromColumn == 7 &&
-                board[move.toRow][move.toColumn].type().equals("Rook")) {
-            canCastle.setBlackRightRookMoved(true);
-        }
+                board[move.toRow][move.toColumn].type().equals("Rook"))
+        { canCastle.setBlackRightRookMoved(true); }
         else if (move.fromRow == 0 && move.fromColumn == 4 &&
-                board[move.toRow][move.toColumn].type().equals("King")) {
-            canCastle.setBlackKingMoved(true);
-        }
+                board[move.toRow][move.toColumn].type().equals("King"))
+        { canCastle.setBlackKingMoved(true); }
         else if (move.fromRow == 7 && move.fromColumn == 0 &&
-                board[move.toRow][move.toColumn].type().equals("Rook")) {
-            canCastle.setWhiteLeftRookMoved(true);
-        }
+                board[move.toRow][move.toColumn].type().equals("Rook"))
+        { canCastle.setWhiteLeftRookMoved(true); }
         else if (move.fromRow == 7 && move.fromColumn == 7 &&
-                board[move.toRow][move.toColumn].type().equals("Rook")) {
-            canCastle.setWhiteRightRookMoved(true);
-        }
+                board[move.toRow][move.toColumn].type().equals("Rook"))
+        { canCastle.setWhiteRightRookMoved(true); }
         else if (move.fromRow == 7 && move.fromColumn == 4 &&
-                board[move.toRow][move.toColumn].type().equals("King")) {
-            canCastle.setWhiteKingMoved(true);
-        }
+                board[move.toRow][move.toColumn].type().equals("King"))
+        { canCastle.setWhiteKingMoved(true); }
     }
 
     /******************************************************************
@@ -786,17 +781,20 @@ public class ChessModel implements IChessModel {
     }
 
     /******************************************************************
-     * AI for game to be added later
+     * AI for black, holds unique moves for first and second turns, and
+     * logic to follow for later turns
      *
      */
     public void AI() {
         /*
          * Write a simple AI set of rules in the following order.
          * a. Check to see if you are in check.
-         * 		i. If so, get out of check by moving the king or placing a piece to block the check
+         * 		i. If so, get out of check by moving the king or
+         *         placing a piece to block the check
          *
          * b. Attempt to put opponent into check (or checkmate).
-         * 		i. Attempt to put opponent into check without losing your piece
+         * 		i. Attempt to put opponent into check without losing
+         *         your piece
          *		ii. Perhaps you have won the game.
          *
          *c. Determine if any of your pieces are in danger,
@@ -804,8 +802,491 @@ public class ChessModel implements IChessModel {
          *		ii. Attempt to protect that piece.
          *
          *d. Move a piece (pawns first) forward toward opponent king
-         *		i. check to see if that piece is in danger of being removed, if so, move a different piece.
+         *		i. check to see if that piece is in danger of being
+         *         removed, if so, move a different piece.
          */
 
+        // check if it's black's first move
+        if (prevMoves.size() == 1) {
+            // grab the location of the piece that white just moved
+            int fromRow = prevMoves.get(0).move.fromRow;
+            int fromColumn = prevMoves.get(0).move.fromColumn;
+            // if they moved queenside pawn, respond with same
+            if (fromRow ==6 && fromColumn == 3) {
+                move(new Move(1, 3, 3, 3));
+                return;
+            }
+            // else move kingside pawn up one
+            else {
+                move(new Move(1, 4, 2, 4));
+                return;
+            }
+        }
+
+        // check if it's black's second move
+        if (prevMoves.size() == 3) {
+            // get ints for white's last move
+            int fromRow = prevMoves.get(2).move.fromRow;
+            int fromColumn = prevMoves.get(2).move.fromColumn;
+            int toRow = prevMoves.get(2).move.toRow;
+            int toColumn = prevMoves.get(2).move.toColumn;
+            // if white continues into queen's gambit, respond with
+            // slab defense
+            if (fromRow == 6 && fromColumn == 2 && toRow == 4
+                    && toColumn == 2) {
+                move(new Move(1, 2, 2, 2));
+                return;
+            }
+        }
+
+        if (!dodgeCheck()) {
+            if (!protectPiece()) {
+                if (!attackOpponent()) {
+                    if (!releaseTheQueen()) {
+                        if (!pushTheRanks()) {
+                            if (!moveSomethingOtherThanTheKing()) {
+                                if (!okayGottaMakeAnActualMove()) {
+                                    moveKing();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    /******************************************************************
+     * logic to get out of check if black king is in check
+     *
+     * @return returns true if move was performed
+     */
+    private boolean dodgeCheck() {
+        // see if black king is in check
+        if (inCheck(player)) {
+            // see if attacking will take the king out of check
+            // be aggressive
+            if (attackOpponent()) {
+                return true;
+            }
+            Move test;
+            // go through rows
+            for (int a = 0; a < 8; ++a) {
+                // go through columns
+                for (int b = 0; b < 8; ++b) {
+                    // check for black piece
+                    if (board[a][b] != null && board[a][b].player()
+                            == player) {
+                        // go through rows
+                        for (int c = 0; c < 8; ++c) {
+                            // go through columns
+                            for (int d = 0; d < 8; ++d) {
+                                // make new move
+                                test = new Move(a, b, c, d);
+                                // see if new move is valid
+                                if (isValidMove(test)) {
+                                    // perform move and return true
+                                    move(test);
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // return false if no move was done
+        return false;
+    }
+
+    /******************************************************************
+     * logic for if black piece is under attack. will perform a move if
+     * the piece being attacked can be protected without sacrificing
+     * the defending piece
+     *
+     * @return returns true if move was performed
+     */
+    private boolean protectPiece() {
+        Move test;
+        // go through rows
+        for (int a = 0; a < 8; ++a) {
+            // go through columns
+            for (int b = 0; b < 8; ++b) {
+                // find white piece
+                if (board[a][b] != null && board[a][b].player()
+                        == player.next()) {
+                    // go through rows
+                    for (int c = 0; c < 8; ++c) {
+                        // go through columns
+                        for (int d = 0; d < 8; ++d) {
+                            // find black piece that isn't a pawn
+                            if (board[c][d] != null && !board[c][d].
+                                    type().equals("Pawn") &&
+                                    board[c][d].player() == player) {
+                                // make move for the white piece
+                                // capturing the black piece
+                                test = new Move(a, b, c, d);
+                                // see if new move is valid. player
+                                // needs to change as isValidMove
+                                // checks to make sure the piece being
+                                // moved is owned by the current player
+                                player = player.next();
+                                if (isValidMove(test)) {
+                                    // check if a move can be done to
+                                    // keep that piece from being
+                                    // captured
+                                    if (canProtect(test)) {
+                                        // return true if canProtect
+                                        // kept a move
+                                        return true;
+                                    }
+                                }
+                                // set player back to black
+                                player = player.next();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // return false if no move is kept
+        return false;
+    }
+
+    /******************************************************************
+     * logic to check if potential white move can be protected against
+     *
+     * @param move move that white will perform to take piece
+     * @return returns true if move will successfully protect piece
+     *      without putting new piece at risk from the attacking white
+     *      piece
+     */
+    private boolean canProtect(Move move) {
+        Move test;
+        // go through rows
+        for (int a = 0; a < 8; ++a) {
+            // go through columns
+            for (int b = 0; b < 8; ++b) {
+                // find black piece
+                if (board[a][b] != null && board[a][b].player()
+                        == player.next()) {
+                    // go through rows
+                    for (int c = 0; c < 8; ++c) {
+                        // go through columns
+                        for (int d = 0; d < 8; ++d) {
+                            // switch to next player so isValidMove
+                            // will check for moves valid to black
+                            player = player.next();
+                            // check all moves that black can do
+                            test = new Move(a, b, c, d);
+                            // see if new move is valid
+                            if (isValidMove(test)) {
+                                // try out the move
+                                move(test);
+                                // see if the parameter move that was
+                                // given is no longer valid
+                                if (!isValidMove(move)) {
+                                    // make a new move to see if white
+                                    // piece that was threatening
+                                    // will be able to capture the
+                                    // black piece that just moved
+                                    // to protect
+                                    Move try2 = new Move(move.fromRow,
+                                            move.fromColumn,
+                                            test.toRow, test.toColumn);
+                                    if (!isValidMove(try2)) {
+                                        // return true if move will be
+                                        // kept
+                                        return true;
+                                    }
+                                }
+                                // undo move if it doesn't meet all
+                                // criteria
+                                undo();
+                            }
+                            // set player back to white
+                            player = player.next();
+                        }
+                    }
+                }
+            }
+        }
+        // return false if no move was kept
+        return false;
+    }
+
+    /******************************************************************
+     * logic if black can take a piece. will not make the attack if the
+     * piece will then be under attack
+     *
+     * @return returns true if move is made
+     */
+    private boolean attackOpponent() {
+
+        Move test;
+        // go through rows
+        for (int a = 0; a < 8; ++a) {
+            // go through columns
+            for (int b = 0; b < 8; ++b) {
+                // check for black piece
+                if (board[a][b] != null && board[a][b].player()
+                        == player) {
+                    // go through rows
+                    for (int c = 0; c < 8; ++c) {
+                        // go through columns
+                        for (int d = 0; d < 8; ++d) {
+                            // check for white piece
+                            if (board[c][d] != null && board[c][d]
+                                    .player() == player.next()) {
+                                // make new move
+                                test = new Move(a, b, c, d);
+                                // see if new move is valid
+                                if (isValidMove(test)) {
+                                    // take the piece
+                                    move(test);
+                                    // check if piece moved into threat
+                                    if (!movedIntoThreat(test)) {
+                                        // return true if piece
+                                        // didn't move
+                                        // into threat
+                                        return true;
+                                    }
+                                    // undo if piece moved into threat
+                                    undo();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // return false if no move was done
+        return false;
+    }
+
+    /******************************************************************
+     * logic to move the queen as far down-right as possible, without
+     * it being under attack after the move.
+     *
+     * @return returns true if move is made
+     */
+    private boolean releaseTheQueen() {
+        Move test;
+        //go through rows
+        for (int a = 7; a >= 0; --a) {
+            // go through columns
+            for (int b = 7; b >= 0; --b) {
+                // find the black king
+                if (board[a][b] != null && board[a][b].player()
+                        == player
+                        && board[a][b].type().equals("Queen")) {
+                    // go through rows
+                    for (int c = 7; c >= 0; --c) {
+                        // go through columns
+                        for (int d = 7; d >= 0; --d) {
+                            // make new move
+                            test = new Move(a, b, c, d);
+                            // see if new move is valid
+                            if (isValidMove(test)) {
+                                // perform move
+                                move(test);
+                                // check if piece moved into threat
+                                if (!movedIntoThreat(test)) {
+                                    // return true if piece didn't move
+                                    // into threat
+                                    return true;
+                                }
+                                // undo if piece moved into threat
+                                undo();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /******************************************************************
+     * logic to find a pawn in the starting pawn row and move it
+     * forward. starts checking on the right side, moves to left, will
+     * move the piece as far down as possible
+     *
+     * @return returns true if move is made
+     */
+    private boolean pushTheRanks() {
+        Move test;
+        // go through columns
+        for (int b = 7; b >= 0; --b) {
+            // check player for non-king black piece
+            if (board[1][b] != null && board[1][b].player()
+                    == player && board[1][b].type()
+                    .equals("Pawn")) {
+                // go through rows
+                for (int c = 7; c >= 0; --c) {
+                    // go through columns
+                    for (int d = 7; d >= 0; --d) {
+                        // make new move
+                        test = new Move(1, b, c, d);
+                        // see if new move is valid
+                        if (isValidMove(test)) {
+                            // perform move
+                            move(test);
+                            // check if piece moved into threat
+                            if (!movedIntoThreat(test)) {
+                                // return true if piece didn't move
+                                // into threat
+                                return true;
+                            }
+                            // undo if piece moved into threat
+                            undo();
+                        }
+                    }
+                }
+            }
+        }
+        // return false if no move was done
+        return false;
+    }
+
+    /******************************************************************
+     * moves the upper-left most piece as far down-right as possible.
+     * does not attempt the move if it will be captured
+     *
+     * @return returns true if move is made
+     */
+    private boolean moveSomethingOtherThanTheKing() {
+        Move test;
+        for (int a = 0; a < 8; ++a) {
+            // go through columns
+            for (int b = 0; b < 8; ++b) {
+                // check player for non-king black piece
+                if (board[a][b] != null && board[a][b].player()
+                        == player && !board[a][b].type()
+                        .equals("King")) {
+                    // go through rows
+                    for (int c = 7; c >= 0; --c) {
+                        // go through columns
+                        for (int d = 7; d >= 0; --d) {
+                            // make new move
+                            test = new Move(a, b, c, d);
+                            // see if new move is valid
+                            if (isValidMove(test)) {
+                                // perform move
+                                move(test);
+                                // check if piece moved into threat
+                                if (!movedIntoThreat(test)) {
+                                    // return true if piece didn't move
+                                    // into threat
+                                    return true;
+                                }
+                                // undo if piece moved into threat
+                                undo();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // return false if no move was done
+        return false;
+    }
+
+    /******************************************************************
+     * logic to move a piece other than the king, regardless of if it
+     * will get captured. the ai needs to make a move, in the end. will
+     * move the upper-left most piece as far down-right as possible
+     *
+     * @return returns true if move is made
+     */
+    private boolean okayGottaMakeAnActualMove() {
+        Move test;
+        for (int a = 0; a < 8; ++a) {
+            // go through columns
+            for (int b = 0; b < 8; ++b) {
+                // check player for non-king black piece
+                if (board[a][b] != null && board[a][b].player()
+                        == player && !board[a][b].type()
+                        .equals("King")) {
+                    // go through rows
+                    for (int c = 7; c >= 0; --c) {
+                        // go through columns
+                        for (int d = 7; d >= 0; --d) {
+                            // make new move
+                            test = new Move(a, b, c, d);
+                            // see if new move is valid
+                            if (isValidMove(test)) {
+                                // perform move
+                                move(test);
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // return false if no move was done
+        return false;
+    }
+
+    /******************************************************************
+     * logic to move the king if no other piece can move. this will
+     * move the king to the top left of the board. will move the king
+     * to the upper-left corner
+     *
+     */
+    public void moveKing() {
+        Move test;
+        //go through rows
+        for (int a = 7; a >= 0; --a) {
+            // go through columns
+            for (int b = 7; b >= 0; --b) {
+                // find the black king
+                if (board[a][b] != null && board[a][b].player()
+                        == player
+                        && board[a][b].type().equals("King")) {
+                    // go through rows
+                    for (int c = 0; c < 8; ++c) {
+                        // go through columns
+                        for (int d = 0; d < 8; ++d) {
+                            // make new move
+                            test = new Move(a, b, c, d);
+                            // see if new move is valid
+                            if (isValidMove(test)) {
+                                // perform move
+                                move(test);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /******************************************************************
+     * checks to see if given move puts piece in risk of being captured
+     *
+     * @param move move just performed
+     * @return returns true if piece is in threat
+     */
+    private boolean movedIntoThreat(Move move) {
+        Move test;
+        // go through rows
+        for (int a = 0; a < 8; ++a) {
+            // go through columns
+            for (int b = 0; b < 8; ++b) {
+                // find black piece
+                if (board[a][b] != null && board[a][b].player()
+                        == player) {
+                    test = new Move(a, b, move.toRow, move.toColumn);
+                    if (isValidMove(test)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }

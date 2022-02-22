@@ -1,5 +1,14 @@
 package chess;
 
+/**********************************************************************
+ * @author Dan Dietsche, Kyle Scott, Joseph Lentine
+ * CIS 162 Winter 2022
+ * 2/21/2022
+ * Project 2
+ *
+ * Rook class, implements the functions of Rook in chess
+ */
+
 public class Rook extends ChessPiece {
 
     /******************************************************************

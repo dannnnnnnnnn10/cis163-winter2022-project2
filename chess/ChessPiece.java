@@ -1,8 +1,9 @@
 package chess;
 
 /**********************************************************************
- * @author Dan Dietsche
+ * @author Dan Dietsche, Kyle Scott, Joseph Lentine
  * CIS 163 Winter 2022
+ * 2/21/2022
  * Project 2
  *
  * ChessPiece class that is extended by all other piece classes

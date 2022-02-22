@@ -1,5 +1,14 @@
 package chess;
 
+/**********************************************************************
+ * @author Dan Dietsche, Kyle Scott, Joseph Lentine
+ * CIS 163 Winter 2022
+ * 2/21/2022
+ * Project 2
+ *
+ * Pawn class, implements the functions of a pawn in chess
+ */
+
 public class Pawn extends ChessPiece{
 
     /******************************************************************

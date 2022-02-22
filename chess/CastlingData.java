@@ -1,8 +1,9 @@
 package chess;
 
 /**********************************************************************
- * @author Dan Dietsche
+ * @author Dan Dietsche, Kyle Scott, Josheph Lentine
  * CIS 163 Winter 2022
+ * 2/21/2022
  * Project 2
  *
  * holds data on if any of the kings or rooks have moved yet this game

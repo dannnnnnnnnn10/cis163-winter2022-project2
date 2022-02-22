@@ -484,6 +484,13 @@ public class TestChess {
         model.move(move);
         assertSame("Bishop", model.pieceAt(5, 4).type());
 
+        assertEquals(move.toString(),("Move [fromRow=7, fromColumn=2, " +
+                "toRow=5, toColumn=4]"));
+
+        Move defaultConstructor = new Move();
+        defaultConstructor = new Move(5, 4, 4,3);
+        model.move(defaultConstructor);
+        assertSame("Bishop", model.pieceAt(4, 3).type());
     }
 
     // tests inCheck method

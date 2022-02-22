@@ -203,6 +203,7 @@ public class ChessPanel extends JPanel {
                 }
         }
         repaint();
+
     }
 
 
@@ -210,6 +211,8 @@ public class ChessPanel extends JPanel {
     private class listener implements ActionListener {
         public void actionPerformed(ActionEvent event) {
             if(event.getSource() == undo){
+                model.undo();
+                // comment out one undo when turning off ai
                 model.undo();
                 displayBoard();
             }
@@ -262,9 +265,35 @@ public class ChessPanel extends JPanel {
                             else if(model.inCheck(Player.BLACK) == true){
                                 showMessageDialog(null, "Black in Check", "Check Warning", JOptionPane.ERROR_MESSAGE);
                             }
+
+                            // comment this out to turn off ai
+                            if (model.currentPlayer() == Player.BLACK) {
+                                model.AI();
+                                if (model.canPromote()) {
+                                    model.promote("Queen");
+                                }
+                                displayBoard();
+                                if(model.inCheck(Player.WHITE) == true){
+                                    showMessageDialog(null, "White in Check", "Check Warning", JOptionPane.ERROR_MESSAGE);
+                                }
+                                if(model.isComplete() == true){
+                                    int response = JOptionPane.showConfirmDialog(null, "Would you like to play a new game?", "Game Over",JOptionPane.YES_NO_OPTION,  JOptionPane.INFORMATION_MESSAGE);
+                                    switch (response) {
+                                        case JOptionPane.YES_OPTION:
+                                            model = new ChessModel();
+                                            displayBoard();
+                                            break;
+                                        case JOptionPane.NO_OPTION:
+                                            System.exit(0);
+                                            break;
+                                        case JOptionPane.CLOSED_OPTION:
+                                            break;
+                                    }
+
+                                }
+                            }
                         }
                     }
         }
     }
 }
-
