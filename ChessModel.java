@@ -3,7 +3,7 @@ package chess;
 import java.util.ArrayList;
 
 /**********************************************************************
- * @author Dan Dietsche
+ * @author Dan Dietsche, Kyle Scott, Joseph Lentine
  * CIS 163 Winter 2022
  * Project 2
  *
