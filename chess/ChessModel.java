@@ -5,7 +5,6 @@ import java.util.ArrayList;
 /**********************************************************************
  * @author Dan Dietsche, Kyle Scott, Joseph Lentine
  * CIS 163 Winter 2022
- * 2/21/22
  * Project 2
  *
  * ChessModel class, uses varoius piece Class logic to play a full game
@@ -23,8 +22,7 @@ public class ChessModel implements IChessModel {
     /** keeps track of what turn it is */
     private int turn;
 
-    /** array of SaveStates that holds relevant data for all prior
-     *  moves */
+    /** array of SaveStates that holds data for all prior moves */
     private ArrayList<SaveState> prevMoves;
 
     /** keeps track of if an en passant move can be done this turn */
@@ -1047,8 +1045,7 @@ public class ChessModel implements IChessModel {
                                     move(test);
                                     // check if piece moved into threat
                                     if (!movedIntoThreat(test)) {
-                                        // return true if piece
-                                        // didn't move
+                                        // return true if piece didn't move
                                         // into threat
                                         return true;
                                     }
@@ -1146,8 +1143,8 @@ public class ChessModel implements IChessModel {
                 }
             }
         }
-        // return false if no move was done
-        return false;
+    // return false if no move was done
+    return false;
     }
 
     /******************************************************************
@@ -1287,6 +1284,6 @@ public class ChessModel implements IChessModel {
                 }
             }
         }
-        return false;
+    return false;
     }
 }
