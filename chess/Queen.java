@@ -45,9 +45,9 @@ public class Queen extends ChessPiece {
      * at location {@code [move.fromRow, move.fromColumn]}.
      * (This method makes no sense otherwise.)
      *
-     * @param move  a {@link Project2.Move} object describing the
+     * @param move  a {@link chess.Move} object describing the
      *                  move to be made.
-     * @param board the {@link Project2.IChessPiece} in which this
+     * @param board the {@link chess.IChessPiece} in which this
      *                  piece resides.
      *
      * @return {@code true} if the proposed move is valid,
@@ -55,16 +55,27 @@ public class Queen extends ChessPiece {
      */
     @Override
     public boolean isValidMove(Move move, IChessPiece[][] board) {
+        // create a bishop piece owned by the queen's player
         Bishop move1 = new Bishop
                 (board[move.fromRow][move.fromColumn].player());
+        // create a rook piece owned by the queen's player
         Rook move2 = new Rook
                 (board[move.fromRow][move.fromColumn].player());
+        // place the bishop on the board where the queen was;
         board[move.fromRow][move.fromColumn] = move1;
+        // check if the bishop move logic could move to the desired
+        // location
         boolean bishopIsValid = move1.isValidMove(move, board);
+        // place the rook on the board where the queen was
         board[move.fromRow][move.fromColumn] = move2;
+        // check if the rook move logic could move to the desired
+        // location
         boolean rookIsValid = move2.isValidMove(move, board);
+        // place the queen back on the board
         board[move.fromRow][move.fromColumn] = this;
-        return (bishopIsValid|| rookIsValid);
+        // return if either the bishop or the rook could perform the
+        // move
+        return (bishopIsValid || rookIsValid);
 
 
 

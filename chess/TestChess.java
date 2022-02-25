@@ -508,7 +508,7 @@ public class TestChess {
 
     // tests isComplete method
     @Test
-    public void testChessModelIsComplete() {
+    public void testChessModelIsCompleteAndNoValidMoves() {
         ChessModel model = new ChessModel();
 
         assertFalse(model.isComplete());
@@ -529,7 +529,34 @@ public class TestChess {
 
         model.setPiece(7, 5, new Pawn(Player.WHITE));
 
+        assertTrue(model.noValidMoves());
         assertTrue(model.isComplete());
+
+        model = new ChessModel();
+        model.setPiece(0,0, null);
+        model.setPiece(0,1,null);
+        model.setPiece(0,2,null);
+        model.setPiece(0,3,null);
+        model.setPiece(0,5,null);
+        model.setPiece(0,6,null);
+        model.setPiece(0,7,null);
+        model.setPiece(1,0,null);
+        model.setPiece(1,1,null);
+        model.setPiece(1,2,null);
+        model.setPiece(1,3,null);
+        model.setPiece(1,4,null);
+        model.setPiece(1,5,null);
+        model.setPiece(1,6,null);
+        model.setPiece(1,7,null);
+        model.setPiece(2,3, new Rook(Player.WHITE));
+        model.setPiece(2,5,new Rook(Player.WHITE));
+        model.setPiece(1,0, new Rook(Player.WHITE));
+
+        model.setNextPlayer();
+
+        assertTrue(model.noValidMoves());
+        assertFalse(model.isComplete());
+
 
     }
 

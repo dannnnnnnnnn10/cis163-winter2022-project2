@@ -44,9 +44,9 @@ public class Rook extends ChessPiece {
      * at location {@code [move.fromRow, move.fromColumn]}.
      * (This method makes no sense otherwise.)
      *
-     * @param move  a {@link Project2.Move} object describing the
+     * @param move  a {@link chess.Move} object describing the
      *                  move to be made.
-     * @param board the {@link Project2.IChessPiece} in which this
+     * @param board the {@link chess.IChessPiece} in which this
      *                  piece resides.
      *
      * @return {@code true} if the proposed move is valid,

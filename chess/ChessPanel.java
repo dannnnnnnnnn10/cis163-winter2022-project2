@@ -252,11 +252,24 @@ public class ChessPanel extends JPanel {
                                         displayBoard();
                                         break;
                                     case JOptionPane.NO_OPTION:
+                                    case JOptionPane.CLOSED_OPTION:
                                         System.exit(0);
                                         break;
-                                    case JOptionPane.CLOSED_OPTION:
-                                        break;
                                 }
+                                if(model.noValidMoves() == true) {
+                                    int response2 = JOptionPane.showConfirmDialog(null, "Would you like to play a new game?", "Draw Game", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+                                    switch (response2) {
+                                        case JOptionPane.YES_OPTION:
+                                            model = new ChessModel();
+                                            displayBoard();
+                                            break;
+                                        case JOptionPane.NO_OPTION:
+                                        case JOptionPane.CLOSED_OPTION:
+                                            System.exit(0);
+                                            break;
+                                    }
+                                }
+
 
                             }
                             if(model.inCheck(Player.WHITE) == true){
@@ -277,17 +290,29 @@ public class ChessPanel extends JPanel {
                                     showMessageDialog(null, "White in Check", "Check Warning", JOptionPane.ERROR_MESSAGE);
                                 }
                                 if(model.isComplete() == true){
-                                    int response = JOptionPane.showConfirmDialog(null, "Would you like to play a new game?", "Game Over",JOptionPane.YES_NO_OPTION,  JOptionPane.INFORMATION_MESSAGE);
-                                    switch (response) {
+                                    int response3 = JOptionPane.showConfirmDialog(null, "Would you like to play a new game?", "Game Over",JOptionPane.YES_NO_OPTION,  JOptionPane.INFORMATION_MESSAGE);
+                                    switch (response3) {
                                         case JOptionPane.YES_OPTION:
                                             model = new ChessModel();
                                             displayBoard();
                                             break;
                                         case JOptionPane.NO_OPTION:
+                                        case JOptionPane.CLOSED_OPTION:
                                             System.exit(0);
                                             break;
-                                        case JOptionPane.CLOSED_OPTION:
-                                            break;
+                                    }
+                                    if(model.noValidMoves() == true) {
+                                        int response4 = JOptionPane.showConfirmDialog(null, "Would you like to play a new game?", "Game Over", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+                                        switch (response4) {
+                                            case JOptionPane.YES_OPTION:
+                                                model = new ChessModel();
+                                                displayBoard();
+                                                break;
+                                            case JOptionPane.NO_OPTION:
+                                            case JOptionPane.CLOSED_OPTION:
+                                                System.exit(0);
+                                                break;
+                                        }
                                     }
 
                                 }
@@ -297,3 +322,4 @@ public class ChessPanel extends JPanel {
         }
     }
 }
+

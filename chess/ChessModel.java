@@ -82,11 +82,27 @@ public class ChessModel implements IChessModel {
     }
 
     /******************************************************************
-     * Returns whether the game is complete.
+     ** Returns whether the game is complete.
      *
      * @return {@code true} if complete, {@code false} otherwise.
      */
     public boolean isComplete() {
+        boolean valid = false;
+        Move test;
+        if (inCheck(player)) {
+            if (noValidMoves()) {
+                return true;
+            }
+        }
+        return valid;
+    }
+
+    /******************************************************************
+     * Returns whether or not there are any legal moves available.
+     *
+     * @return true if complete, false otherwise.
+     */
+    public boolean noValidMoves() {
         boolean valid = true;
         Move test;
         Player p = player;
