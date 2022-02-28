@@ -1,7 +1,7 @@
 package chess;
 
 /**********************************************************************
- * @author Dan Dietsche, Kyle Scott, Joshep Lentine
+ * @author Dan Dietsche (CIS), Kyle Scott (CIS), Joseph Lentine (ENG)
  * CIS 163 Winter 2022
  * 2/21/2022
  * Project 2

@@ -4,6 +4,16 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
+/**********************************************************************
+ * @author Dan Dietsche (CIS), Kyle Scott (CIS), Joseph Lentine (ENG)
+ * CIS 163 Winter 2022
+ * 2/21/2022
+ * Project 2
+ *
+ * test cases written to test the logic for ChessModel and all the
+ * chess pieces
+ *
+ */
 public class TestChess {
 
 
